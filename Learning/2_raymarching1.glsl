@@ -62,7 +62,6 @@ void main()
 		col *= lighting(intersect.normal, intersect.IP);
 
 		//reflection
-		0	
 	}
 
 	//fog

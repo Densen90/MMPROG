@@ -166,7 +166,7 @@ Intersection intersect(vec3 dir, vec3 orig)
 	for(float i=-0.15; i<=0.15; i+=0.3)
 	{
 		s.position = vec3(i*2, -0.17, 2);
-		s.mat.color = vec4(0.5+i*3, 0.2+i*3, 0.8+i*3, 1);
+		s.mat.color = vec3(0.5+i*3, 0.2+i*3, 0.8+i*3);
 
 		float new_t = intersectSphere(dir, orig, s);
 
