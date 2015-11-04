@@ -46,7 +46,7 @@ Material cylinderMaterial;
 
 void materialInit();
 bool raymarch(vec3 O, vec3 D);
-float shadow(vec3 O, vec3 D, float k);
+float shadow(vec3 O, vec3 D, float k, float dl);
 float ambientOcclusion(vec3 O, vec3 D);
 float lighting(vec3 N, vec3 IP);
 vec3 getNormal(vec3 P);
@@ -61,15 +61,10 @@ void main()
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
-	// cam.orig = vec3(0,-0.3,iGlobalTime);
 	cam.orig = vec3(0,-0.3,-2.5);
 	cam.dir = normalize(vec3( p.x, p.y, 1 ));
 
-	// cam.dir = rotate(cam.dir,vec3(mod(iGlobalTime*15, 360), mod(iGlobalTime*10, 360), mod(iGlobalTime*25, 360)));
-
-	// light.orig = vec3(0, sin(iGlobalTime), cos(iGlobalTime));
-	// light.orig = vec3(cos(iGlobalTime), 0, sin(iGlobalTime)-0.5);
-	light.orig = vec3(-0.2, 0.5, -1);
+	light.orig = vec3(0.9, 0.9, -3);
 
 	vec3 col;
 	float steps = maxSteps;
@@ -90,7 +85,6 @@ void main()
 			if(raymarch(intersect.IP+0.01*intersect.normal, reflecRay))
 			{
 				col += intersect.mat.col * refCoef;
-				// col *= lighting(intersect.normal, intersect.IP);
 				refCoef = intersect.mat.refCoef;
 				curRefRay = reflecRay;
 			}
@@ -98,7 +92,7 @@ void main()
 
 		//shadow
 		vec3 shadowRay = normalize(light.orig-firstIntersect.IP);
-		col *= shadow(firstIntersect.IP+0.01*firstIntersect.normal, shadowRay, 2.0);
+		col *= shadow(firstIntersect.IP+0.01*firstIntersect.normal, shadowRay, 2.0, distance(firstIntersect.IP, light.orig));
 	
 		//ambientOcclusion
 		float ao = ambientOcclusion(firstIntersect.IP, firstIntersect.normal);
@@ -116,20 +110,15 @@ void main()
 void materialInit()
 {
 	sphereMaterial.col = vec3(0.7,0.4,0.2);
-	sphereMaterial.refCoef = 0.3;
+	sphereMaterial.refCoef = 0.0;
 	planeMaterial.col = vec3(0.2,0.4,0.7);
-	planeMaterial.refCoef = 0.1;
+	planeMaterial.refCoef = 0.0;
 	cubeMaterial.col = vec3(0.2,0.7,0.4);
 	cubeMaterial.refCoef = 0.0;
 	torusMaterial.col = vec3(0.6,0.7,0.2);
 	torusMaterial.refCoef = 0.3;
 	cylinderMaterial.col = vec3(0.8,0.3,0.8);
 	cylinderMaterial.refCoef = 0.0;
-}
-
-float si(float x)
-{
-	return sin(x)/(x);
 }
 
 // give the distance from point p to a sphere surface at origin
@@ -169,13 +158,9 @@ float distCylinder( vec3 p, vec2 h )
 
 // repetition for a point p with 
 // factor c = (distance between spheres)
-// t = the restriction
-vec3 pointRepetition(vec3 p, vec3 c, vec3 t)
+vec3 pointRepetition(vec3 p, vec3 c)
 {
 	vec3 v = mod(p, c) - 0.5 * c;
-	// bool farPlane = (p.x > cam.orig.x+t.x) || (p.x < cam.orig.x-t.x) || (p.y > cam.orig.y+t.y) || (p.z > cam.orig.z+t.z);
-	// bool nearPlane = (p.z < cam.orig.z+0.3);
-	// v *= farPlane || nearPlane ? 0 : 1;
 	return v;
 }
 
@@ -213,15 +198,15 @@ mat3 RotationMatrix(float angleX, float angleY, float angleZ)
 	angleY = angleY*PI/180.0;
 	angleZ = angleZ*PI/180.0;
 
-	mat3 xRot = mat3 (	1,	0,			0,
+	mat3 xRot = mat3 (	1,	0,				0,
 						0,	cos(angleX),	-sin(angleX),
 						0,	sin(angleX),	cos(angleX) );
 	mat3 yRot = mat3 ( 	cos(angleY),		0,	sin(angleY),
-						0,				1,	0,
-						-sin(angleY),	0,	cos(angleY) );
+						0,					1,	0,
+						-sin(angleY),		0,	cos(angleY) );
 	mat3 zRot = mat3 (	cos(angleZ),	-sin(angleZ),	0,
-						sin(angleZ),	cos(angleZ),		0,
-						0,			0,				1 );
+						sin(angleZ),	cos(angleZ),	0,
+						0,				0,				1 );
 	return xRot * yRot * zRot;
 }
 
@@ -235,35 +220,24 @@ vec3 rotate( vec3 p, vec3 r )
 //we can step this far, without overshooting
 float distanceField(vec3 p)
 {
-	// float ret;
-	// float dPlane = distPlane(p, normalize(vec3(0,1,0)), 1);
-	// float dSphere = distSphere(p - vec3(0.65, -0.75, 0), 0.25);
-	// ret = opUnion(dPlane, dSphere);
-	// intersect.mat = (ret==dPlane) ? planeMaterial : sphereMaterial;
-
-	// float dCube = distBox(p - vec3(-0.65, -0.75, 0.115), vec3(0.25));
-	// ret = opUnion(ret, dCube);
-	// intersect.mat = (ret==dCube) ? cubeMaterial : intersect.mat;
-
-	// float dTorus = distTorus(rotate(p-vec3(0.05, -0.6, 0.5), vec3(90,iGlobalTime*50,0)), vec2(0.3, 0.1));
-	// ret = opUnion(ret, dTorus);
-	// intersect.mat = (ret==dTorus) ? torusMaterial : intersect.mat;
-
 	float ret;
 
 	float dPlane = distPlane(p, normalize(vec3(0,1,0)), 1);
-	float dCube = distBox(rotate(p - vec3(0.0, -0.2, 0.115), vec3(0, iGlobalTime*45, iGlobalTime*45)), 
-						vec3(0.5));
-	ret = opUnion(dPlane, dCube);
-	intersect.mat = (ret==dPlane) ? planeMaterial : cubeMaterial;
+	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(0,-1,0)), 1));
+	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(1,0,0)), 1));
+	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(-1,0,0)), 1));
+	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(0,0,-1)), 1));
 
-	float dCylinder = distCylinder(rotate(p - vec3(0.0, -0.2, 0.115), vec3(iGlobalTime*45, 0, iGlobalTime*45+90)), 
-									vec2(0.35, 0.6));
-	ret = opSubstract(dCylinder, ret);
+	float dSphere = distSphere(p - vec3(0, 0, 0), 0.8);
 
-	dCylinder = distCylinder(rotate(p - vec3(0.0, -0.2, 0.115), vec3(iGlobalTime*45-90, 0, iGlobalTime*45+90)), 
-									vec2(0.35, 0.6));
-	ret = opSubstract(dCylinder, ret);
+	vec3 repPoint = pointRepetition(rotate(p, vec3(0, iGlobalTime*20, 0)), vec3(0.1,0.1,0.1));
+	float dCube = distBox(repPoint, vec3(0.04));
+	float subs = opSubstract(dCube, dSphere);
+
+	float dSphereRep = distSphere(repPoint, 0.08);
+	subs = opSubstract(dSphereRep, subs);
+	ret = opUnion(dPlane, subs);
+	intersect.mat = (ret==subs) ? sphereMaterial : planeMaterial;
 
 	return ret;
 }
@@ -320,23 +294,25 @@ float lighting(vec3 normal, vec3 IP)
 
 // calculate shadow, ro=origin, rd=dir
 // look for nearest point when raymarching, factor k gives smoothnes, 2=smooth, 128=hard
-float shadow(vec3 ro, vec3 rd, float k)
+// dl is distance to light, so only return if distance is smaller
+float shadow(vec3 ro, vec3 rd, float k, float dl)
 {
 	float res = 1.0;
     for( float t=0; t < 100.0; )
     {
         float h = distanceField(ro + rd*t);
         if( h<epsilon )
-            return 0.0;
-        res = min( res, k*h/t );
+            return ambient;
+        // res = min( res, k*h/t );
         t += h;
+        if(t>=dl) return res;
     }
     return res;
 }
 
 float ambientOcclusion(vec3 ro, vec3 rd)
 {
-	float step = 0.2;
+	float step = 0.01;
 	float ao = distanceField(ro + step*rd);
 	float res = ao/step;	//if ao, distance to nearest object is smaller than the step
 					//point is in a narrow place, if bigger, ao is bigger, o ambient ambient Occlusion
