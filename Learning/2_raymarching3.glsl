@@ -92,7 +92,7 @@ void main()
 
 		//shadow
 		vec3 shadowRay = normalize(light.orig-firstIntersect.IP);
-		col *= shadow(firstIntersect.IP+0.01*firstIntersect.normal, shadowRay, 2.0, distance(firstIntersect.IP, light.orig));
+		col *= shadow(firstIntersect.IP+0.01*firstIntersect.normal, shadowRay, 100.0, distance(firstIntersect.IP, light.orig));
 	
 		//ambientOcclusion
 		float ao = ambientOcclusion(firstIntersect.IP, firstIntersect.normal);
