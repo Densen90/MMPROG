@@ -7,7 +7,20 @@ const int maxSteps = 200;	// slow if the step size is small, and inaccurate if t
 const float epsilon = 0.0001;
 const float ambient = 0.2;
 const float PI = 3.14159;
-const float bigNumber = 10000;
+const float bigNumber = 10000.0;
+
+const float triggerTime1 = 2.75;
+const float animTime1 = 0.15;
+const float triggerTime2 = 6.3;
+const float animTime2 = 0.15;
+const float triggerTime3 = 10.0;
+const float animTime3 = 0.15;
+const float triggerTime4 = 13.8;
+const float animTime4 = 0.15;
+const float triggerTime5 = 14.5;
+const float animTime5 = 4.0;
+
+int currentAnim = 0;
 
 struct Cam
 {
@@ -38,11 +51,10 @@ Light light;
 Cam cam;
 Intersection intersect;
 Material matWhite;
-float elapsedTime = 0.0;
 
-void materialInit();
+void init();
+int timeTrigger();
 bool raymarch(vec3 O, vec3 D);
-float shadow(vec3 O, vec3 D, float k, float dl);
 float ambientOcclusion(vec3 O, vec3 D);
 float lighting(vec3 N, vec3 IP);
 vec3 getNormal(vec3 P);
@@ -50,43 +62,48 @@ vec3 rotate( vec3 p, vec3 r );
 
 void main()
 {
-	materialInit();
+	init();
+
+	currentAnim = timeTrigger();
+
+	bool hit = raymarch(cam.orig, cam.dir);
+
+	vec3 col = hit ? intersect.mat.col : vec3(0.0);
+
+	col *= lighting(intersect.normal, intersect.IP);
+
+	//ambientOcclusion
+	float ao = ambientOcclusion(intersect.IP, intersect.normal);
+	// col *= ao;
+	
+	gl_FragColor = vec4(col, 1.0);
+}
+
+void init()
+{
 	//shift camera to center, origin(0,0) is now at middle of screen
 	float fov = 60.0;
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
-	cam.orig = vec3(0,-0.3,-2.5);
+	cam.orig = vec3(0.0,0.0,-2.5 + sin(iGlobalTime*12.0)*0.2);
 	cam.dir = normalize(vec3( p.x, p.y, 1 ));
 
-	light.orig = vec3(0.8, 0.7, -3);
+	light.orig = vec3(0, 0, 0);
 
-	vec3 col = vec3(0.0);
-	float steps = maxSteps;
-	
-	if(raymarch(cam.orig, cam.dir))
-	{
-		Intersection firstIntersect = intersect;
-		col = firstIntersect.mat.col;
-		// col *= lighting(firstIntersect.normal, firstIntersect.IP);
-		float refCoef = firstIntersect.mat.refCoef;
-
-		//shadow
-		vec3 shadowRay = normalize(light.orig-firstIntersect.IP);
-		// col *= shadow(firstIntersect.IP+0.01*firstIntersect.normal, shadowRay, 2.0, distance(firstIntersect.IP, light.orig));
-	
-		//ambientOcclusion
-		float ao = ambientOcclusion(firstIntersect.IP, firstIntersect.normal);
-		// col *= ao;
-	}
-	
-	gl_FragColor = vec4(col, 1.0);
-}
-
-void materialInit()
-{
 	matWhite.col = vec3(1.0);
 	matWhite.refCoef = 0.0;
+}
+
+int timeTrigger()
+{
+	if(iGlobalTime>=triggerTime1 && iGlobalTime<triggerTime2) return 1;
+	else if(iGlobalTime>=triggerTime2 && iGlobalTime<triggerTime3) return 2;
+	else if(iGlobalTime>=triggerTime3 && iGlobalTime<triggerTime4) return 3;
+	else if(iGlobalTime>=triggerTime4 && iGlobalTime<triggerTime5) return 4;
+	else if(iGlobalTime>=triggerTime5) return 5;
+
+	return 0;
 }
 
 float si(float x)
@@ -153,22 +170,80 @@ float distTriPrism( vec3 p, vec2 h )
 float distanceField(vec3 p)
 {
 	float ret;
-	float rot = sin(iGlobalTime)*360;
-	vec3 pos = rotate(p-vec3(0, 0, 3.0), vec3(0,0,rot));
-	float dist1 = distTriPrism(pos, vec2(0.6));
-	float dist2 = distSphere(pos, 0.6);
-	ret = opUnion(dist1, dist2);
-	ret = clamp(mix(dist1, dist2, sin(iGlobalTime)), 0.0, 1.0);
+	// float rot = sin(iGlobalTime)*360.0;
+	// vec3 pos = rotate(p-vec3(0, 0, 3), vec3(0,0,rot));
+	// float dist1 = distTriPrism(pos, vec2(0.6));
+	// float dist2 = distSphere(pos, 0.6);
+	// ret = opUnion(dist1, dist2);
+	// ret = clamp(mix(dist1, dist2, sin(iGlobalTime)), 0.0, 1.0);
 
-	pos = rotate(p-vec3(0, 0, 3.0), vec3(0,0,rot+180));
-	dist1 = distTriPrism(pos, vec2(0.4));
-	dist2 = distSphere(pos, 0.6);
-	float tmp = clamp(mix(dist1, dist2, sin(iGlobalTime)), 0.0, 1.0);
+	// pos = rotate(p-vec3(0, 0, 3.0), vec3(0,0,rot+180.0));
+	// dist1 = distTriPrism(pos, vec2(0.4));
+	// dist2 = distSphere(pos, 0.6);
+	// float tmp = clamp(mix(dist1, dist2, sin(iGlobalTime)), 0.0, 1.0);
 
-	ret = opUnion(ret, tmp);
+	// ret = opUnion(ret, tmp);
+
+	vec3 pos = p-vec3(0, 0, 3);
+	vec2 triSize = vec2(1.0,0.5);
+	float tri1, tri2, tri3, tri4, sph1;
+	tri1 = tri2 = tri3 = tri4 = sph1 = bigNumber;
 
 	intersect.mat = matWhite;
 
+	switch(currentAnim)
+	{
+		case 0:
+			tri1 = distTriPrism(pos, triSize);
+			ret = tri1;
+			break;
+		case 1:
+			tri1 = distTriPrism(pos, triSize);
+			float rot = mix(0.0, 60.0, clamp((iGlobalTime-triggerTime1)/animTime1, 0.0, 1.0));
+			tri2 = distTriPrism(rotate(pos, vec3(0,0,rot)), triSize);
+			ret = opUnion(tri1, tri2);
+			break;
+		case 2:
+			tri1 = distTriPrism(pos, triSize);
+			vec3 trans1 = mix(vec3(0), vec3(1.0, 0.5, 0.0), clamp((iGlobalTime-triggerTime2)/animTime2, 0.0, 1.0));
+			tri2 = distTriPrism(rotate(pos-trans1, vec3(0,0,60)), triSize);
+			tri3 = distTriPrism(rotate(pos, vec3(0,0,60)), triSize);
+			ret = opUnion(tri1, opUnion(tri2, tri3));
+			break;
+		case 3:
+			tri1 = distTriPrism(pos, triSize);
+			vec3 trans2 = mix(vec3(0), vec3(-1.0, 0.5, 0.0), clamp((iGlobalTime-triggerTime3)/animTime3, 0.0, 1.0));
+			tri2 = distTriPrism(rotate(pos-vec3(1.0, 0.5, 0.0), vec3(0,0,60)), triSize);
+			tri3 = distTriPrism(rotate(pos-trans2, vec3(0,0,60)), triSize);
+			tri4 = distTriPrism(rotate(pos, vec3(0,0,60)), triSize);
+			ret = opUnion(tri1, opUnion(tri2, opUnion(tri3, tri4)));
+			break;
+		case 4:
+			tri1 = distTriPrism(pos, triSize);
+			vec3 trans3 = mix(vec3(0), vec3(0.0, -1.1, 0.0), clamp((iGlobalTime-triggerTime4)/animTime4, 0.0, 1.0));
+			tri2 = distTriPrism(rotate(pos-vec3(1.0, 0.5, 0.0), vec3(0,0,60)), triSize);
+			tri3 = distTriPrism(rotate(pos-vec3(-1.0, 0.5, 0.0), vec3(0,0,60)), triSize);
+			tri4 = distTriPrism(rotate(pos-trans3, vec3(0,0,60)), triSize);
+			ret = opUnion(tri1, opUnion(tri2, opUnion(tri3, tri4)));
+			break;
+		case 5:
+			float pRot = (iGlobalTime-triggerTime5)*30;
+			tri1 = distTriPrism(rotate(pos, vec3(0,0,-pRot)), triSize);
+			tri2 = distTriPrism(rotate(pos-vec3(1.0, 0.5, 0.0), vec3(0,0,60+pRot)), triSize);
+			tri3 = distTriPrism(rotate(pos-vec3(-1.0, 0.5, 0.0), vec3(0,0,60+pRot)), triSize);
+			tri4 = distTriPrism(rotate(pos-vec3(0.0, -1.1, 0.0), vec3(0,0,60+pRot)), triSize);
+			sph1 = distSphere(pos-vec3(0,0,0.9), 2.0);
+			ret = opUnion(tri1, opUnion(tri2, opUnion(tri3, tri4)));
+			ret = mix(ret, sph1, clamp((iGlobalTime-triggerTime5)/animTime5, 0.0, 1.0));
+			break;
+	}
+
+	// tri1 = distTriPrism(pos, triSize);
+	// tri2 = distTriPrism(rotate(pos-vec3(1.0, 0.5, 0.0), vec3(0,0,60)), triSize);
+	// tri3 = distTriPrism(rotate(pos-vec3(-1.0, 0.5, 0.0), vec3(0,0,60)), triSize);
+	// tri4 = distTriPrism(rotate(pos-vec3(0.0, -1.1, 0.0), vec3(0,0,60)), triSize);
+	// sph1 = distSphere(pos-vec3(0,0,0.9), 2.0);
+	// ret = opUnion(sph1, opUnion(tri1, opUnion(tri2, opUnion(tri3, tri4))));
 	return ret;
 }
 
@@ -216,27 +291,9 @@ float lighting(vec3 normal, vec3 IP)
 	vec3 reflection = normalize(reflect(light.dir, normal));
 	vec3 viewDirection = normalize(IP);
 	float spec = max(ambient, dot(reflection, viewDirection));
-	spec = lambert+pow(spec, 20);
+	spec = lambert+pow(spec, 20.0);
 
 	return spec;
-}
-
-// calculate shadow, ro=origin, rd=dir
-// look for nearest point when raymarching, factor k gives smoothnes, 2=smooth, 128=hard
-// dl is distance to light, so only return if distance is smaller
-float shadow(vec3 ro, vec3 rd, float k, float dl)
-{
-	float res = 1.0;
-    for( float t=0; t < 100.0; )
-    {
-        float h = distanceField(ro + rd*t);
-        if( h<epsilon )
-            return ambient;
-        // res = min( res, k*h/t );
-        t += h;
-        if(t>=dl) return res;
-    }
-    return res;
 }
 
 float ambientOcclusion(vec3 ro, vec3 rd)
