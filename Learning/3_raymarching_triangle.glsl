@@ -31,18 +31,14 @@ struct Intersection
 {
 	vec3 IP;
 	vec3 normal;
-	float steps;
 	Material mat;
 };
 
 Light light;
 Cam cam;
 Intersection intersect;
-Material sphereMaterial;
-Material planeMaterial;
-Material cubeMaterial;
-Material torusMaterial;
-Material cylinderMaterial;
+Material matWhite;
+float elapsedTime = 0.0;
 
 void materialInit();
 bool raymarch(vec3 O, vec3 D);
@@ -65,102 +61,37 @@ void main()
 
 	light.orig = vec3(0.8, 0.7, -3);
 
-	vec3 col;
+	vec3 col = vec3(0.0);
 	float steps = maxSteps;
 	
 	if(raymarch(cam.orig, cam.dir))
 	{
 		Intersection firstIntersect = intersect;
 		col = firstIntersect.mat.col;
-		col *= lighting(firstIntersect.normal, firstIntersect.IP);
-		steps = firstIntersect.steps;
+		// col *= lighting(firstIntersect.normal, firstIntersect.IP);
 		float refCoef = firstIntersect.mat.refCoef;
-		vec3 curRefRay = cam.dir;
-
-		// reflection
-		for(int i=0; i<1; i++)
-		{
-			vec3 reflecRay = normalize(reflect(curRefRay, intersect.normal));
-			if(raymarch(intersect.IP+0.01*intersect.normal, reflecRay))
-			{
-				col += intersect.mat.col * refCoef;
-				refCoef = intersect.mat.refCoef;
-				curRefRay = reflecRay;
-			}
-		}
 
 		//shadow
 		vec3 shadowRay = normalize(light.orig-firstIntersect.IP);
-		col *= shadow(firstIntersect.IP+0.01*firstIntersect.normal, shadowRay, 2.0, distance(firstIntersect.IP, light.orig));
+		// col *= shadow(firstIntersect.IP+0.01*firstIntersect.normal, shadowRay, 2.0, distance(firstIntersect.IP, light.orig));
 	
 		//ambientOcclusion
 		float ao = ambientOcclusion(firstIntersect.IP, firstIntersect.normal);
-		col *= ao;
+		// col *= ao;
 	}
-
-	//fog
-	vec3 fogColor = vec3(0);
-	float fogDist = 100;
-	col = mix(col, fogColor, steps/fogDist);
 	
 	gl_FragColor = vec4(col, 1.0);
 }
 
 void materialInit()
 {
-	sphereMaterial.col = vec3(0.7,0.4,0.2);
-	sphereMaterial.refCoef = 0.0;
-	planeMaterial.col = vec3(0.2,0.4,0.7);
-	planeMaterial.refCoef = 0.0;
-	cubeMaterial.col = vec3(0.2,0.7,0.4);
-	cubeMaterial.refCoef = 0.0;
-	torusMaterial.col = vec3(0.6,0.7,0.2);
-	torusMaterial.refCoef = 0.3;
-	cylinderMaterial.col = vec3(0.8,0.3,0.8);
-	cylinderMaterial.refCoef = 0.0;
+	matWhite.col = vec3(1.0);
+	matWhite.refCoef = 0.0;
 }
 
-// give the distance from point p to a sphere surface at origin
-float distSphere(vec3 p, float rad)
+float si(float x)
 {
-	return length(p) - rad;
-}
-
-// give the distance from point p to a box surface with dimensions b
-float distBox(vec3 p, vec3 b)
-{
-  vec3 d = abs(p) - b;
-  return min(max(d.x,max(d.y,d.z)),0.0) +
-         length(max(d,0.0));
-}
-
-// give the distance to a torus from a point p and dimension t
-float distTorus( vec3 p, vec2 t )
-{
-  vec2 q = vec2(length(p.xz)-t.x,p.y);
-  return length(q)-t.y;
-}
-
-// give the distance to a plane from a point p and normal n, shifted by y
-float distPlane( vec3 p, vec3 n, float y )
-{
-  // n must be normalized
-  return dot(p,n.xyz) + y;
-}
-
-//give distance to cylinder from a point p with dimensions h
-float distCylinder( vec3 p, vec2 h )
-{
-  vec2 d = abs(vec2(length(p.xz),p.y)) - h;
-  return min(max(d.x,d.y),0.0) + length(max(d,0.0));
-}
-
-// repetition for a point p with 
-// factor c = (distance between spheres)
-vec3 pointRepetition(vec3 p, vec3 c)
-{
-	vec3 v = mod(p, c) - 0.5 * c;
-	return v;
+	return x==0.0 ? 0.0 : sin(x)/x;
 }
 
 // unions two distances / objects
@@ -179,15 +110,6 @@ float opSubstract( float d1, float d2 )
 float opIntersect( float d1, float d2 )
 {
     return max(d1,d2);
-}
-
-// twist the object
-vec3 opTwist( vec3 p, float amount )
-{
-    float c = cos(amount*p.y);
-    float s = sin(amount*p.y);
-    mat2  m = mat2(c,-s,s,c);
-    return vec3(m*p.xz,p.y);
 }
 
 //get rotation matrix for angle
@@ -215,28 +137,37 @@ vec3 rotate( vec3 p, vec3 r )
     return RotationMatrix(r.x, r.y, r.z)*p;
 }
 
+float distSphere(vec3 p, float rad)
+{
+	return length(p) - rad;
+}
+
+float distTriPrism( vec3 p, vec2 h )
+{
+    vec3 q = abs(p);
+    return max(q.z-h.y,max(q.x*0.866025+p.y*0.5,-p.y)-h.x*0.5);
+}
+
 //Returns the closest distance to a surface from p in our scene, 
 //we can step this far, without overshooting
 float distanceField(vec3 p)
 {
 	float ret;
-	p.y += sin(p.z - iGlobalTime * 6.0) * cos(p.x - iGlobalTime) * .25;
-	float dPlane = distPlane(p, normalize(vec3(0,1,0)), 1);
-	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(0,-1,0)), 1));
-	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(1,0,0)), 1));
-	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(-1,0,0)), 1));
-	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(0,0,-1)), 1));
+	float rot = sin(iGlobalTime)*360;
+	vec3 pos = rotate(p-vec3(0, 0, 3.0), vec3(0,0,rot));
+	float dist1 = distTriPrism(pos, vec2(0.6));
+	float dist2 = distSphere(pos, 0.6);
+	ret = opUnion(dist1, dist2);
+	ret = clamp(mix(dist1, dist2, sin(iGlobalTime)), 0.0, 1.0);
 
-	float dSphere = distSphere(p - vec3(0, 0, 0), 0.8);
+	pos = rotate(p-vec3(0, 0, 3.0), vec3(0,0,rot+180));
+	dist1 = distTriPrism(pos, vec2(0.4));
+	dist2 = distSphere(pos, 0.6);
+	float tmp = clamp(mix(dist1, dist2, sin(iGlobalTime)), 0.0, 1.0);
 
-	vec3 repPoint = pointRepetition(rotate(p, vec3(0, iGlobalTime*20, 0)), vec3(0.1,0.1,0.1));
-	float dCube = distBox(repPoint, vec3(0.04));
-	float subs = opSubstract(dCube, dSphere);
+	ret = opUnion(ret, tmp);
 
-	float dSphereRep = distSphere(repPoint, 0.08);
-	subs = opSubstract(dSphereRep, subs);
-	ret = opUnion(dPlane, subs);
-	intersect.mat = (ret==subs) ? sphereMaterial : planeMaterial;
+	intersect.mat = matWhite;
 
 	return ret;
 }
@@ -256,7 +187,6 @@ bool raymarch(vec3 rayOrigin, vec3 rayDir)
 			intersect.normal = getNormal(rayOrigin + totalDist*rayDir);
 			return true;
 		}
-		intersect.steps++;
 		totalDist += dist;
 	}
 
