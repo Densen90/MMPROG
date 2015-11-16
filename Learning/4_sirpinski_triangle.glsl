@@ -14,7 +14,7 @@ in vec2 uv;
 #define AOSAMPLES 5.0
 
 const vec3 lightDir = normalize(vec3(-1,0.8,-1));
-const vec3 lightCol = vec3(0.7, 0.1, 0.6);
+const vec3 lightCol = vec3(0.7, 0.5, 0.8);
 const vec3 diffuse = vec3(1, 1, 1);
 
 struct Camera
@@ -45,14 +45,14 @@ vec3 rotate( vec3 p, vec3 r )
 // give the distance to a plane from a point p and normal n, shifted by y
 float distPlane( vec3 p, vec3 n, float y )
 {
-  // n must be normalized
-  return dot(p,n) + y;
+	// n must be normalized
+	return dot(p-vec3(0,y,0),n);
 }
 
 // Formula for fractal from http://blog.hvidtfeldts.net/index.php/2011/08/distance-estimated-3d-fractals-iii-folding-space/
 float distFrac(vec3 p)
 {
-	const float scale = 1.85;
+	const float scale = 1.8;
 	const float offset = 2.0;
 
 	for(int n=0; n< FRACTALITERATIONS; n++)
@@ -72,11 +72,13 @@ float distFrac(vec3 p)
 float distanceField(vec3 p)
 {
 	//Rotate scene around y-axis
-	vec3 rotP = rotate(p, vec3(45, sin(iGlobalTime) * 0.5 * 180, 45));
+	vec3 rotP = rotate(p, vec3(0, mod(iGlobalTime*20, 360),0));
+	rotP = rotate(rotP-vec3(0,-0.6,0), vec3(0, 45,55));
+	
 
 	float dPlane = distPlane(p, vec3(0,1,0), -2.0);
 	float dFrac = distFrac(rotP);
-	return dFrac;
+	return min(dFrac, dPlane);
 }
 
 // marching along the ray at step sizes, 
@@ -156,8 +158,8 @@ void main()
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
-	cam.pos = vec3(0,0,-8);
-	cam.dir = normalize(vec3( p.x, p.y, 1 ));
+	cam.pos = vec3(0,3,-6);
+	cam.dir = rotate(normalize(vec3( p.x, p.y, 1 )), vec3(-25, 0, 0));
 
 	vec4 res;
 
