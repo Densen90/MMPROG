@@ -43,6 +43,7 @@ Material planeMaterial;
 Material cubeMaterial;
 Material torusMaterial;
 Material cylinderMaterial;
+bool hasTexture = false;
 
 void materialInit();
 bool raymarch(vec3 O, vec3 D);
@@ -109,13 +110,13 @@ void main()
 void materialInit()
 {
 	sphereMaterial.col = vec3(0.7,0.4,0.2);
-	sphereMaterial.refCoef = 0.0;
+	sphereMaterial.refCoef = 0.1;
 	planeMaterial.col = vec3(0.2,0.4,0.7);
-	planeMaterial.refCoef = 0.0;
+	planeMaterial.refCoef = 0.1;
 	cubeMaterial.col = vec3(0.2,0.7,0.4);
 	cubeMaterial.refCoef = 0.0;
 	torusMaterial.col = vec3(0.6,0.7,0.2);
-	torusMaterial.refCoef = 0.3;
+	torusMaterial.refCoef = 0.1;
 	cylinderMaterial.col = vec3(0.8,0.3,0.8);
 	cylinderMaterial.refCoef = 0.0;
 }
@@ -220,12 +221,13 @@ vec3 rotate( vec3 p, vec3 r )
 float distanceField(vec3 p)
 {
 	float ret;
-	p.y += sin(p.z - iGlobalTime * 6.0) * cos(p.x - iGlobalTime) * .25;
-	float dPlane = distPlane(p, normalize(vec3(0,1,0)), 1);
-	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(0,-1,0)), 1));
+	// p.y += sin(p.z - iGlobalTime * 6.0) * cos(p.x - iGlobalTime) * .25;
+	float dPlaneDown = distPlane(p, normalize(vec3(0,1,0)), 1);
+	float dPlane = opUnion(dPlaneDown, distPlane(p, normalize(vec3(0,-1,0)), 1));
 	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(1,0,0)), 1));
 	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(-1,0,0)), 1));
 	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(0,0,-1)), 1));
+	dPlane = opUnion(dPlane, distPlane(p, normalize(vec3(0,0,1)), 4));
 
 	float dSphere = distSphere(p - vec3(0, 0, 0), 0.8);
 
@@ -233,11 +235,12 @@ float distanceField(vec3 p)
 	float dCube = distBox(repPoint, vec3(0.04));
 	float subs = opSubstract(dCube, dSphere);
 
-	float dSphereRep = distSphere(repPoint, 0.08);
+	float dSphereRep = distSphere(repPoint, 0.02);
 	subs = opSubstract(dSphereRep, subs);
 	ret = opUnion(dPlane, subs);
 	intersect.mat = (ret==subs) ? sphereMaterial : planeMaterial;
 
+	hasTexture = (ret==subs);
 	return ret;
 }
 
@@ -254,6 +257,11 @@ bool raymarch(vec3 rayOrigin, vec3 rayDir)
 		{
 			intersect.IP = rayOrigin + totalDist*rayDir;
 			intersect.normal = getNormal(rayOrigin + totalDist*rayDir);
+
+			vec2 texUV =  vec2((atan(intersect.IP.z, intersect.IP.x) / PI + 1.0) * 0.5 + iGlobalTime*0.055,
+                                  (asin(intersect.IP.y) / PI + 0.5));
+			// texUV.x -= iGlobalTime * 0.056;
+			intersect.mat.col = hasTexture ? texture(tex, texUV).rgb + vec3(0.15) : intersect.mat.col;
 			return true;
 		}
 		intersect.steps++;
