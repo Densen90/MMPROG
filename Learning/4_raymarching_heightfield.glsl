@@ -141,7 +141,7 @@ vec3 shading(vec3 pos, vec3 n, float h)
 	// light *= vec3(0.1, 0.4, 0.1);
 	// float fac = clamp(dot(n, vec3(0,1,0)), 0.0, 1.0);
 	// light *= (h<=-YSHIFT+0.005) ? vec3(0.2,0.2,0.7) : mix(vec3(0.57,0.53,0.43), vec3(0.41,0.67,0.33), pow(fac, 20.0));
-	vec3 col = texture(tex2, pos.xz/EXPANSION);
+	vec3 col = texture(tex2, pos.xz/EXPANSION).rgb;
 	light *= col;
 	return light;
 }
