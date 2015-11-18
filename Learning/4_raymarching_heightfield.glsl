@@ -1,16 +1,18 @@
 uniform vec2 iResolution;
 uniform float iGlobalTime;
 uniform sampler2D tex;
+uniform sampler2D tex2;
 in vec2 uv;
 
 #define DELTA 0.1
 #define AMBIENT 0.2
-#define HEIGHTSCALE 4
+#define HEIGHTSCALE 3.0
 #define YSHIFT 1.0
-#define EXPANSION 50
+#define EXPANSION 50.0
 #define PI 3.14159
-#define FOGFACTOR 3
+#define FOGFACTOR 3.0
 #define MAXDIST 50.0
+#define AOSAMPLES 5.0
 
 vec3 lightDir = normalize(vec3(0,-0.5,-1));
 const vec3 diffuse = vec3(1, 1, 1);
@@ -71,7 +73,7 @@ bool raymarch(vec3 orig, vec3 dir, out float t, out float h)
 			
 			//Bisection Marching between outer and inner point
 			vec3 p = orig + out_t*dir;
-			const float maxSteps = 10.0;
+			const float maxSteps = 5.0;
 			for(float j=1.0; j<maxSteps; j++)
 			{
 				t = (out_t+in_t)*0.5;
@@ -91,10 +93,10 @@ bool raymarch(vec3 orig, vec3 dir, out float t, out float h)
 // If p is near a surface, the function will approximate the surface normal.
 vec3 getNormal(vec3 p)
 {
-	float h = 0.015;
+	float h = 0.15;
 	return normalize(vec3(
 		textureLookup(p.xz - vec2(h, 0)) - textureLookup(p.xz + vec2(h, 0)),
-		2*h,
+		2.0*h,
 		textureLookup(p.xz - vec2(0, h)) - textureLookup(p.xz + vec2(0, h))));
 }
 
@@ -104,22 +106,43 @@ vec3 getNormal(vec3 p)
 float shadow(vec3 ro, vec3 rd)
 {
 	float t, h;
-    return raymarch(ro, rd, t, h) ? AMBIENT : 1.0;
+	bool hit = raymarch(ro, rd, t, h);
+    return hit ? AMBIENT : 1.0;
+}
+
+//calculate ambient occlusion
+float ambientOcclusion(vec3 p, vec3 n)
+{
+	float res = 0.0;
+	float fac = 1.0;
+	for(float i=0.0; i<AOSAMPLES; i++)
+	{
+		float distOut = i*0.3;	//go on normal ray AOSAMPLES times with factor 0.3
+		float t, h;
+		vec3 pos = (p + n*distOut);
+		float dh = max(textureLookup(pos.xz)-p.y, 0.0);
+		res += fac * dh;	//look for every step, how far the nearest object is
+		fac *= 0.5;	//for every step taken on the normal ray, the fac decreases, so the shadow gets brighter
+	}
+	return 1.0 - clamp(res, 0.0, 1.0);
 }
 
 //calculatte the color, the shadow, the lighting for a position
 vec3 shading(vec3 pos, vec3 n, float h)
 {
-	vec3 light = max(AMBIENT, dot(n, -lightDir));
+	vec3 light = max(vec3(AMBIENT), dot(n, -lightDir));
 	// vec3 light = vec3(h);
 	// light *= diffuse;
-	light *= shadow(pos + DELTA*n, -lightDir);
-	// light += ambientOcclusion(pos, n) * AMBIENT;
+	// light *= shadow(pos + 0.05*n, -lightDir);
+	light += ambientOcclusion(pos, n) * AMBIENT;
 
 	//coloring
+
 	// light *= vec3(0.1, 0.4, 0.1);
-	float fac = clamp(dot(n, vec3(0,1,0)), 0.0, 1.0);
-	light *= mix(vec3(0.7,0.7,0.7), vec3(0.1,0.8,0.1), pow(fac, 3));
+	// float fac = clamp(dot(n, vec3(0,1,0)), 0.0, 1.0);
+	// light *= (h<=-YSHIFT+0.005) ? vec3(0.2,0.2,0.7) : mix(vec3(0.57,0.53,0.43), vec3(0.41,0.67,0.33), pow(fac, 20.0));
+	vec3 col = texture(tex2, pos.xz/EXPANSION);
+	light *= col;
 	return light;
 }
 
@@ -140,10 +163,12 @@ void main()
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
-	cam.pos = vec3(10,5,iGlobalTime*5);
+	// float camHeight = textureLookup(vec2(10, iGlobalTime*5.0));
+	float camHeight = 5.0;
+	cam.pos = vec3(10,camHeight+0.5,iGlobalTime*5.0);
 	cam.dir = rotate( normalize(vec3( p.x, p.y, 1 )), vec3(-20,0,0));
 
-	lightDir = rotate(lightDir, vec3(0,mod(-iGlobalTime*(360.0/(2*PI))*0.5,360), 0));
+	lightDir = rotate(lightDir, vec3(0,mod(-iGlobalTime*(360.0/(2.0*PI))*0.5,360.0), 0));
 
 	float t, h;
 	vec3 col;
@@ -151,8 +176,12 @@ void main()
 	if(raymarch(cam.pos, cam.dir, t, h))
 	{
 		vec3 pos = cam.pos + t*cam.dir;
-		col.rgb = clamp((shading(pos.xyz, getNormal(pos), h)), 0.0, 1.0);
+		vec3 n = getNormal(pos);
+		
+		col.rgb = clamp((shading(pos.xyz, n, h)), 0.0, 1.0);
 		// gl_FragColor = vec4(getNormal(pos), 1.0);
+
+		vec3 refDir = normalize(reflect(cam.dir, n));
 	}
 
 	//fog
