@@ -6,7 +6,7 @@ in vec2 uv;
 
 #define DELTA 0.1
 #define AMBIENT 0.2
-#define HEIGHTSCALE 3.0
+#define HEIGHTSCALE 4.0
 #define YSHIFT 1.0
 #define EXPANSION 50.0
 #define PI 3.14159
