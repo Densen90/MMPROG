@@ -13,6 +13,8 @@ in vec2 uv;
 #define SOFTSHADOWFAC 10.0
 
 const vec3 lightDir = normalize(vec3(-1.0,0.8,-1.0));
+const float radius = 0.01;
+float smallestDist = 10000.0;
 
 struct Camera
 {
@@ -37,9 +39,9 @@ float distSphere(vec3 p, float rad)
 // --> distance of the nearest surface.
 float distanceField(vec3 p)
 {
-	float dSphere = distSphere(p - vec3(0, -0.3, 5), 0.5);
+	float dSphere = distSphere(p - vec3(0, -3, 5), radius);
 	float dPlane = distPlane(p, vec3(0,1,0), -1);
-	return min(dSphere, dPlane);
+	return dSphere;
 }
 
 // Approximates the (normalized) gradient of the distance function at the given point.
@@ -58,10 +60,12 @@ vec3 getNormal(vec3 p)
 vec4 raymarch(vec3 rayOrigin, vec3 rayDir)
 {
 	float totalDist = 0.0;
+	smallestDist = 10000.0;
 	for(int j=0; j<MAXSTEPS; j++)
 	{
 		vec3 p = rayOrigin + totalDist*rayDir;
 		float dist = distanceField(p);
+		smallestDist = dist<smallestDist ? dist : smallestDist;
 		if(abs(dist)<EPSILON)	//if it is near the surface, return an intersection
 		{
 			return vec4(p, 1.0);
@@ -109,7 +113,16 @@ void main()
 
 	vec4 res = raymarch(cam.pos, cam.dir);
 
-	res.xyz = (res.a==1.0) ? clamp(shading(res.xyz, cam.dir, getNormal(res.xyz)), 0.0, 1.0) : vec3(0);
+	if(res.a==1.0)
+	{
+		res.xyz = vec3(0.6,0.0,0.0);
+	}
+	else
+	{
+		float maxDelta = 5.0*sin(iGlobalTime) + 5.0;
+		smallestDist = min(smallestDist, maxDelta);
+		res.xyz = mix(vec3(1.0,0.0,0.0), vec3(0), pow(smallestDist/maxDelta, 0.1));
+	}
 
 	gl_FragColor = vec4(res.xyz, 1.0);
 }
