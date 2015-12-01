@@ -39,7 +39,7 @@ float distSphere(vec3 p, float rad)
 // --> distance of the nearest surface.
 float distanceField(vec3 p)
 {
-	float dSphere = distSphere(p - vec3(0, -3, 5), radius);
+	float dSphere = distSphere(p - vec3(0, 0, 5*sin(iGlobalTime)+5), radius);
 	float dPlane = distPlane(p, vec3(0,1,0), -1);
 	return dSphere;
 }
@@ -119,9 +119,9 @@ void main()
 	}
 	else
 	{
-		float maxDelta = 5.0*sin(iGlobalTime) + 5.0;
+		float maxDelta =  3.0;
 		smallestDist = min(smallestDist, maxDelta);
-		res.xyz = mix(vec3(1.0,0.0,0.0), vec3(0), pow(smallestDist/maxDelta, 0.1));
+		res.xyz = mix(vec3(1.0,0.0,0.0), vec3(0), pow(smallestDist/maxDelta, 0.2));
 	}
 
 	gl_FragColor = vec4(res.xyz, 1.0);
