@@ -24,7 +24,7 @@ vec3 rotate( vec3 p, vec3 r )
 
 float calculateConeRad(in float h, in vec2 uv)
 {
-	float minAngle = 90.0;
+	float minAngle = PI/2.0;
 	float stepSize = 1.0/iResolution;
 
 	for(float x=0.0; x<=1.0; x+=stepSize)
@@ -38,8 +38,8 @@ float calculateConeRad(in float h, in vec2 uv)
 				//calculate angle
 				float dist = length(newUV-uv);
 				float deltaHeight = newHeight - h;
-				float angle =  90.0 - atan(deltaHeight/dist) * 180.0/PI;
-				minAngle = angle<minAngle ? angle : minAngle;
+				float angle = (PI/2.0) - atan(deltaHeight/dist);
+				minAngle = angle<minAngle ? (angle+minAngle)/2.0 : minAngle;
 			}
 		}
 	}
@@ -52,7 +52,7 @@ void main()
 	float height = texture2D(tex, uv);
 	float cone_rad = calculateConeRad(height, uv);
 
-	gl_FragColor = vec4(cone_rad/90.0, height, 0.0, 1.0) ;
+	gl_FragColor = vec4(cone_rad/(0.5*PI), height , 0.0, 1.0) ;
 	// gl_FragColor = vec4(height);
 }
 

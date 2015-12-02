@@ -4,10 +4,10 @@ uniform sampler2D tex;
 uniform sampler2D tex2;
 in vec2 uv;
 
-#define MAXSTEPS 256
+#define MAXSTEPS 1024
 #define DELTA 0.1
 #define AMBIENT 0.2
-#define HEIGHTSCALE 8.0
+#define HEIGHTSCALE 3.0
 #define YSHIFT 1.0
 #define EXPANSION 50.0
 #define PI 3.14159
@@ -44,22 +44,24 @@ vec3 rotate( vec3 p, vec3 r )
 }
 
 //make a texture lookup on the heightfield
-float textureLookup(vec2 uv)
+vec3 textureLookup(in sampler2D texture,in vec2 uv, in float hscale = 1.0, in float yshift = 0.0)
 {
-	return texture(tex, uv/EXPANSION).r * HEIGHTSCALE - YSHIFT;
+	return texture2D(texture, uv/EXPANSION) * hscale - yshift;
 }
 
 //increase ray with DELTA, make a texture lookup
 //and compare to height, if we are inside, return position
 bool raymarch(vec3 orig, vec3 dir, out float t, out float h)
 {
+	t = MAXDIST;
 	float totalDist = 0.0;
 	for(float i=0.0; i<MAXSTEPS; i++)
 	{
 		vec3 p = orig + totalDist*dir;
-		float alpha = texture2D(tex, p.xz/EXPANSION).r;
-		float height = texture2D(tex, p.xz/EXPANSION).g * HEIGHTSCALE - YSHIFT;
+		float alpha = textureLookup(tex, p.xz).r;
+		float height = textureLookup(tex, p.xz, HEIGHTSCALE, YSHIFT).g;
 		if(height>p.y) return true;
+
 		float c = p.y - height;
 		float beta = dot(dir, vec3(0,-1,0));
 		float gamma = PI - alpha - beta;
@@ -67,8 +69,9 @@ bool raymarch(vec3 orig, vec3 dir, out float t, out float h)
 		totalDist += abs(addDist);
 
 		h = height;
+		t = totalDist;
 
-		if(abs(addDist) < 0.007) return true;
+		if(abs(addDist) < 0.001) return true;
 	}
 
 	return false;
@@ -78,11 +81,11 @@ bool raymarch(vec3 orig, vec3 dir, out float t, out float h)
 // If p is near a surface, the function will approximate the surface normal.
 vec3 getNormal(vec3 p)
 {
-	float h = 0.15;
+	float h = 0.9;
 	return normalize(vec3(
-		textureLookup(p.xz - vec2(h, 0)) - textureLookup(p.xz + vec2(h, 0)),
+		textureLookup(tex, p.xz - vec2(h, 0), HEIGHTSCALE, YSHIFT).r - textureLookup(tex, p.xz + vec2(h, 0), HEIGHTSCALE, YSHIFT).r,
 		2.0*h,
-		textureLookup(p.xz - vec2(0, h)) - textureLookup(p.xz + vec2(0, h))));
+		textureLookup(tex, p.xz - vec2(0, h), HEIGHTSCALE, YSHIFT).r - textureLookup(tex, p.xz + vec2(0, h), HEIGHTSCALE, YSHIFT).r));
 }
 
 void main()
@@ -112,10 +115,15 @@ void main()
 		// vec3 refDir = normalize(reflect(cam.dir, n));
 
 		col = vec4(h/HEIGHTSCALE);
-		// col = max(vec3(AMBIENT), dot(n, -lightDir));
+		col = textureLookup(tex2, pos.xz).rgb;
+		col *= max(vec3(AMBIENT), dot(n, -lightDir));
 		// col = texture(tex2, pos.xz/EXPANSION).rgb;
 	}
 	else col = vec4(0.3,0.2,0.2,1.0);
 
+	vec3 back = vec3(0.3,0.5,0.2);
+
+	float factor = t/MAXDIST;
+	// col = mix(col, back, pow(factor, FOGFACTOR));
 	gl_FragColor = vec4(col.rgb, 1.0);
 }
