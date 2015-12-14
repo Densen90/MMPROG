@@ -93,19 +93,17 @@ bool raymarch(vec3 rayOrigin, vec3 rayDir, out vec3 hitPos, out vec3 hitNormal)
 	return false;
 }
 
-vec3 inscatter( in Ray rayEye, in vec4 light, in vec3 screenPos)
+vec3 inscatter( in Ray cam, in vec4 light, in vec3 screenPos)
 {
-	vec3 rayEeyeNDir = normalize( rayEye.dir );
-	
 	float scatter = 0.0;	//how much the scatter is
 	float invStepSize = 1.0 / INSCATTER_STEPS;	//one step on the ray for scattering
 	
 	vec3 hitPos, hitNrm;
-	vec3 p = rayEye.orig;
-	vec3 dp = rayEeyeNDir * invStepSize * SCENETRACEDEPTH;
+	vec3 p = cam.orig;
+	vec3 dp = cam.dir * invStepSize * SCENETRACEDEPTH;
 	
 	// apply random offset to minimize banding artifacts.
-	// p += dp * noise( screenPos ) * 1.5;
+	p += dp * noise( screenPos ) * 1.5;
 	
 	for ( int i = 0; i < INSCATTER_STEPS; ++i )
 	{
@@ -123,9 +121,6 @@ vec3 inscatter( in Ray rayEye, in vec4 light, in vec3 screenPos)
 			// a simple falloff function base on distance to light
 			float falloff = 1.0 - pow( clamp( dist2Lgt / light.w, 0.0, 1.0 ), 0.125 );
 			sum += falloff;
-			
-			// float smoke = noise( 1.25 * ( p + vec3( iGlobalTime * 0.5, 0.0, 0.0 ) ) ) * 0.375;
-			// sum += smoke * falloff;
 		}
 		
 		scatter += sum;
@@ -149,13 +144,14 @@ void main()
 					0.0 + sin( iGlobalTime * 0.5 ) * 2.0, 
 					0.0 + cos( iGlobalTime * 0.5 ) * 2.0, 
 					3.0, 
-					8.0 );
+					6.0 );
 
 	vec3 hitPos, hitNormal;
-	vec3 res = vec3(0.0);
+	vec3 res = vec3(0.3, 0.1, 0.2);
 	if(raymarch(cam.orig, cam.dir, hitPos, hitNormal))
 	{
-		res.rgb = vec3(0.125);
+		res.rgb = vec3(0.025);
+		res.rgb *= max(0.2, dot(hitNormal, normalize(light.xyz-hitPos)));
 	}
 
 	res.rgb += inscatter(cam, light, vec3( gl_FragCoord.xy, 0.0 ));
