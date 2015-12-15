@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DemoData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ShaderRatios>
+    <ShaderPathRatio>
+      <ShaderPath>.\01_startText.glsl</ShaderPath>
+      <Ratio>0.080818966</Ratio>
+    </ShaderPathRatio>
+    <ShaderPathRatio>
+      <ShaderPath>.\02_scatter_room.glsl</ShaderPath>
+      <Ratio>0.919181049</Ratio>
+    </ShaderPathRatio>
+  </ShaderRatios>
+  <Textures>
+    <string>C:\Projects\Multimedia Programmierung\MMPROG\Learning\Demo\t0_black.png</string>
+    <string>C:\Projects\Multimedia Programmierung\MMPROG\Learning\Demo\t1_text_interpret.png</string>
+    <string>C:\Projects\Multimedia Programmierung\MMPROG\Learning\Demo\t2_text_creator.png</string>
+    <string>.\t0_black.png</string>
+    <string>.\t1_text_interpret.png</string>
+    <string>.\t2_text_creator.png</string>
+  </Textures>
+  <SoundFileName>.\Predestined Fate.mp3</SoundFileName>
+</DemoData>
