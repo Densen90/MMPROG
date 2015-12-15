@@ -21,6 +21,8 @@ struct Light
 	vec3 dir;
 } light;
 
+bool castShadow;
+
 float hash (float n)
 {
 	return fract(sin(n)*43758.5453);
@@ -42,10 +44,56 @@ float noise (in vec3 x)
 	return res;
 }
 
+// substracts two distances / objects
+float opSubstract( float d1, float d2 )
+{
+    return max(-d1,d2);
+}
+
 // give the distance from point p to a sphere surface at origin
 float distSphere(vec3 p, float rad)
 {
 	return length(p) - rad;
+}
+
+// give the distance to a plane from a point p and normal n, shifted by y
+float distPlane( vec3 p, vec3 n, float y )
+{
+  // n must be normalized
+  return dot(p,n.xyz) + y;
+}
+
+// give the distance from point p to a box surface with dimensions b
+float distBox(vec3 p, vec3 b)
+{
+  vec3 d = abs(p) - b;
+  return min(max(d.x,max(d.y,d.z)),0.0) +
+         length(max(d,0.0));
+}
+
+float distWindow(vec3 p)
+{
+	float windowTiles = 2.0;
+	float distance = 0.22;
+	float ret = distBox(p-vec3(0,0,2), vec3(10, 10, 0.01));
+	float box = distBox(p-vec3(-0.2,0.2,2), vec3(0.1,0.1,0.1));
+	float startPos = -0.2;
+
+	for(float i=0; i<windowTiles; i++)
+	{
+		for(float j=0; j<windowTiles; j++)
+		{
+			vec3 pos = vec3(startPos+i*distance,startPos+j*distance,2);
+			ret = opSubstract(distBox(p-pos, vec3(0.1,0.1,0.1)), ret);
+		}
+	}
+
+	// float floor = distBox(p-vec3(0,-0.7,2), vec3(2, 0.01, 1.0));
+	// ret = min(ret, floor);
+
+	// castShadow = (ret==floor);
+
+	return ret;
 }
 
 // return positive values when outside and negative values inside,
@@ -57,7 +105,7 @@ float distanceField(vec3 p)
 	dSphere1 = min(dSphere1, distSphere(p -  vec3(0.5,  -0.5, 2.0), 0.25));
 	dSphere1 = min(dSphere1, distSphere(p -  vec3(-0.5,  -0.5, 2.0), 0.25));
 
-	return dSphere1;
+	return distWindow(p);
 }
 
 // Approximates the (normalized) gradient of the distance function at the given point.
@@ -132,6 +180,21 @@ vec3 inscatter( in Ray cam, in vec4 light, in vec3 screenPos)
 	return vec3( scatter );
 }
 
+float shadow(vec3 ro, vec3 rd, float k, float dl)
+{
+	float res = 1.0;
+    for( float t=0; t < 100.0; )
+    {
+        float h = distanceField(ro + rd*t);
+        if( h<EPSILON )
+            return 0.0;
+        // res = min( res, k*h/t );
+        t += h;
+        if(t>=dl) return res;
+    }
+    return res;
+}
+
 void main()
 {
 	float fov = 60.0;
@@ -141,25 +204,33 @@ void main()
 	cam.orig = vec3( 0.0, 0.0, 0.0 );
 	cam.dir = normalize(vec3( p.x, p.y, 1 ));
 	vec4 light = vec4( 		//xyz: pos, w: strength
-					0.0 + sin( iGlobalTime * 0.5 ) * 2.0, 
-					0.0 + cos( iGlobalTime * 0.5 ) * 2.0, 
-					3.0, 
-					6.0 );
+					0.0 + sin( iGlobalTime * 0.5 ), 
+					0.0 + cos( iGlobalTime * 0.5 ), 
+					0.01, 
+					5.0 );
 
 	vec3 hitPos, hitNormal;
-	vec3 res = vec3(0.3, 0.1, 0.2);
+	vec3 res = vec3(0.2, 0.4, 0.8);
 	if(raymarch(cam.orig, cam.dir, hitPos, hitNormal))
 	{
 		res.rgb = vec3(0.025);
-		res.rgb *= max(0.2, dot(hitNormal, normalize(light.xyz-hitPos)));
+		// if(castShadow)
+		// {
+		// 	vec3 sRayOrig = hitPos + EPSILON*hitNormal;
+		// 	vec3 sRayDir = normalize(light.xyz-hitPos);
+		// 	float d = distance(hitPos, light.xyz);
+			
+		// 	res.rgb *= shadow(sRayOrig, sRayDir, 100.0, d);
+		// }
+		// res.rgb *= max(0.3, dot(hitNormal, normalize(light.xyz-hitPos)));
 	}
 
 	res.rgb += inscatter(cam, light, vec3( gl_FragCoord.xy, 0.0 ));
 
 	// color correction - Sherlock color palette
-	res.r = smoothstep( 0.0, 1.0, res.r );
-	res.g = smoothstep( 0.0, 1.0, res.g - 0.1 );
-	res.b = smoothstep(-0.3, 1.3, res.b );
+	// res.r = smoothstep( 0.0, 1.0, res.r );
+	// res.g = smoothstep( 0.0, 1.0, res.g - 0.1 );
+	// res.b = smoothstep(-0.3, 1.3, res.b );
 
 	gl_FragColor = vec4(res.xyz, 1.0);
 }
