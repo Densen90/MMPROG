@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DemoData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Uniforms>
+    <SerializableUniform>
+      <UniformName>uCameraZ</UniformName>
+      <Keyframes>
+        <Keyframe>
+          <Time>0</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>11.6530209</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>138.64</Time>
+          <Value>1</Value>
+        </Keyframe>
+      </Keyframes>
+    </SerializableUniform>
+    <SerializableUniform>
+      <UniformName>uScatterPower</UniformName>
+      <Keyframes>
+        <Keyframe>
+          <Time>0</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>138.64</Time>
+          <Value>8.5</Value>
+        </Keyframe>
+      </Keyframes>
+    </SerializableUniform>
+  </Uniforms>
+  <ShaderRatios>
+    <ShaderPathRatio>
+      <ShaderPath>.\02_scatter_room.glsl</ShaderPath>
+      <Ratio>1</Ratio>
+    </ShaderPathRatio>
+  </ShaderRatios>
+  <Textures />
+  <SoundFileName>.\Predestined Fate.mp3</SoundFileName>
+</DemoData>

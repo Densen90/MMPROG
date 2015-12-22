@@ -4,6 +4,8 @@ uniform sampler2D tex0;
 uniform sampler2D tex1;
 uniform sampler2D tex2;
 
+uniform float uFade;
+
 	
 vec3 line(vec2 p, float sx)
 {
@@ -35,10 +37,9 @@ void main()
 	// if(iGlobalTime<8.0)
 	c = tCol+tCol2;
 
-	if(iGlobalTime > 8.0)
-	{
-		c *= 1.0 - (iGlobalTime-8.0)/3.0;
-	}
+	c.r = mix(c.r, 0.0, uFade);
+	c.g = mix(c.g, 0.0, uFade);
+	c.b = mix(c.b, 0.0, uFade);
 
 	gl_FragColor = vec4(c, 1.0 );
 }

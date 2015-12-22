@@ -1,17 +1,18 @@
+//Thanks to light scatter shader by Robert Cupisz 2013
+
 uniform vec2 iResolution;
 uniform float iGlobalTime;
-// Robert Cupisz 2013
-// Creative Commons Attribution-ShareAlike 3.0 Unported
-//
-// Bits of code taken from Inigo Quilez, including fbm()
+
+uniform float uCameraZ;
+uniform float uScatterPower;
+uniform float uWindowRotation;
+uniform float uWindowXRotation;
+uniform float uFade;
 
 #define INF 1.0e38
 #define PI 3.14159
 #define SCATTER_STEPS 128
-#define SCATTERPOWER 0.7
-
-const vec3 ROOFPOS = vec3(0.2,-1,0.01);
-float lightStrength = 0.0;
+#define SCATTERPOWER 0.5
 
 float hash (float n)
 {
@@ -48,6 +49,17 @@ float fbm (vec3 p)
 	return f;
 }
 
+float particles (vec3 p)
+{
+	vec3 pos = p;
+	pos.y -= iGlobalTime*0.2;	//particles moving up
+	float n = fbm(20.0*pos);
+	n = pow(n, 5.0);
+	float brightness = noise(10.3*p);
+	float threshold = 0.26;
+	return smoothstep(threshold, threshold + 0.15, n)*brightness*90.0;
+}
+
 // Rotation / Translation of a point p with rotation r
 vec3 rotate( vec3 p, vec3 r )
 {
@@ -67,7 +79,7 @@ vec3 rotate( vec3 p, vec3 r )
 	return xRot * yRot * zRot * p;
 }
 
-float roof(vec3 roofPos, vec3 dir)
+float window(vec3 roofPos, vec3 dir)
 {
 	float dist = -roofPos.y/dir.y;
 
@@ -91,40 +103,41 @@ float roof(vec3 roofPos, vec3 dir)
 	return dist;
 }
 
-float intersect (vec3 ro, vec3 rd)
+float wall(float wallDist, float dirY)
+{
+	float floorHit = -(wallDist/dirY);
+
+	return floorHit < 0.0 ? INF : floorHit;
+}
+
+float raycast (vec3 ro, vec3 rd, bool scatter)
 {
 	//Raycasting with two planes (Floor and roof)
 	float dist = INF;
 
+	vec3 roRot = rotate(ro, vec3(uWindowXRotation, 0, uWindowRotation));
+	vec3 rdRot = rotate(rd, vec3(uWindowXRotation, 0, uWindowRotation));
+
+	vec3 windowPos = vec3(0,-1,0.1);
+
 	//check if hit is at the World Position of RoofPosition
-	vec3 roofPos = rotate(ro+ROOFPOS, vec3(30, 0, 0));
-	vec3 rayDir = rotate(rd, vec3(30, 0, 0));
-	dist = min(dist, roof(roofPos, rayDir));
+	vec3 roofPos = roRot+windowPos;
+	vec3 rayDir = rdRot;
+	dist = min(dist, window(roofPos, rayDir));
 	
-	// floor
-	float floorPos = 0.95;
-	float floorHit = -(ro.y + floorPos)/rd.y;
-	if (floorHit < 0.0)
-	{
-		floorHit = INF;
-	}
+	// Distance wall to window
+	float wallDist = 0.95;
+	//depending if it is scatter: if scatter, don't rotate plane, to scatter to ground, if no scatter, raycast to parallel wall
+	wallDist = scatter ? ro + wallDist : roRot + wallDist;
+	float  dirY = scatter ? rd.y : rdRot.y;
+	float floorHit = wall(wallDist, dirY);
+
 	dist = min(dist, floorHit);
 
 	return dist;
 }
 
-float particles (vec3 p)
-{
-	vec3 pos = p;
-	pos.y -= iGlobalTime*0.2;	//particles moving up
-	float n = fbm(20.0*pos);
-	n = pow(n, 5.0);
-	float brightness = noise(10.3*p);
-	float threshold = 0.26;
-	return smoothstep(threshold, threshold + 0.15, n)*brightness*90.0;
-}
-
-vec3 inscatter (vec3 ro, vec3 rd, vec3 lightDir, float hit, vec2 screenPos)
+vec3 inscatter (vec3 ro, vec3 rd, vec3 scatterDir, float hit, vec2 screenPos)
 {
 	float farPlane = 9.0;
 	
@@ -135,12 +148,12 @@ vec3 inscatter (vec3 ro, vec3 rd, vec3 lightDir, float hit, vec2 screenPos)
 	float light = 0.0;
 	
 	// add noise to the start position to hide banding
-	pos += rd*noise(vec3(2.0*screenPos, 0.0))*0.05;
+	pos += rd*noise(vec3(2.0*screenPos, 0.0))*0.1;
 
 	for(int i = 0; i < SCATTER_STEPS; i++)
 	{
 		//if hit, it is black, else white, later the mean is builded to have a transparent godray
-		float l = intersect(pos, lightDir) == INF ? 1.0 : 0.0;
+		float l = raycast(pos, scatterDir, true) == INF ? 1.0 : 0.0;
 		light += l;
 		//particles only if they are in the godray
 		light += particles(pos)*l;
@@ -148,7 +161,7 @@ vec3 inscatter (vec3 ro, vec3 rd, vec3 lightDir, float hit, vec2 screenPos)
 	}
 
 	light *= oneOverSteps * distAlongView;	//the mean(Durchschnitt)
-	return light*SCATTERPOWER;
+	return light*vec3(uScatterPower);
 }
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
@@ -157,42 +170,48 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
-	vec3 ro = vec3( 0.0, 0.0, min(-8.0 + iGlobalTime, -2.0));
+	vec3 ro = vec3( 0.02, 0.0, uCameraZ);
 	vec3 rd = normalize(vec3( p.x, p.y, 1 ));
 
 	// raycast the scene
-	float d = intersect(ro,rd);
+	float d = raycast(ro,rd, false);
 	
 	// white window -> no hit
 	if (d == INF)
 	{
-		fragColor = vec4(1.0);
+		fragColor = vec4(mix(1.0, 0.0, uFade));
 		return;
 	}
 
 	vec3 hitPos = ro + d * rd;
 
 	float shadowBias = 1.0e-4;
-	vec3 rotation = vec3(cos(iGlobalTime)*20,0,sin(iGlobalTime)*10);
-	// rotation = vec3(0);
-	vec3 lightDir = rotate(normalize(vec3(0,1,0)), rotation);
 
-	vec3 c = vec3(0.0);
-	//raycast from hitPoint + lightDir, if no hit, draw white (same as roof window)
-	if (intersect(hitPos + lightDir*shadowBias, lightDir) == INF)
-		c = vec3(0.6);
+	vec3 col = vec3(0.0);
 
-	c += inscatter(ro, rd, lightDir, d, fragCoord.xy);
+	float xsDir = uWindowRotation < 0 ? 1.0 : -1.0;
+	float ysDir = 0.6;
+	float zsDir = 0;
+
+	if(uWindowRotation == 0)
+	{
+		xsDir = 0.0; ysDir = 0.6; zsDir = 1.0;
+	}
+	if(uWindowXRotation == 90) ysDir = 0.0;
+
+	vec3 scatterDir = vec3(xsDir, ysDir, zsDir);
+
+	col += inscatter(ro, rd, scatterDir, d, fragCoord.xy);
 	
 	// color correction - Sherlock color palette ;)
-	c.r = smoothstep(0.0, 0.5, c.r);
-	c.g = smoothstep(0.0, 0.5, c.g - 0.1);
-	c.b = smoothstep(-0.3, 1.5, c.b);
+	col.r = smoothstep(0.0, 0.5, col.r);
+	col.g = smoothstep(0.0, 0.5, col.g - 0.1);
+	col.b = smoothstep(-0.3, 1.5, col.b);
 	
-	fragColor = vec4(c, 1.0);
+	fragColor = vec4(col, 1.0);
 }
 
 void main()
 {
-	mainImage(gl_FragColor, gl_FragCoord);
+	mainImage(gl_FragColor, gl_FragCoord.xy);
 }
