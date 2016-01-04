@@ -42,7 +42,7 @@
           <Value>0</Value>
         </Keyframe>
         <Keyframe>
-          <Time>19.3433132</Time>
+          <Time>19.543314</Time>
           <Value>0</Value>
         </Keyframe>
         <Keyframe>
@@ -177,18 +177,10 @@
   </Uniforms>
   <ShaderRatios>
     <ShaderPathRatio>
-      <ShaderPath>.\01_startText.glsl</ShaderPath>
-      <Ratio>0.0820568949</Ratio>
-    </ShaderPathRatio>
-    <ShaderPathRatio>
-      <ShaderPath>.\02_scatter_room.glsl</ShaderPath>
-      <Ratio>0.9179431</Ratio>
+      <ShaderPath>.\03_checker_room.glsl</ShaderPath>
+      <Ratio>1</Ratio>
     </ShaderPathRatio>
   </ShaderRatios>
-  <Textures>
-    <string>.\t0_black.png</string>
-    <string>.\t1_text_interpret.png</string>
-    <string>.\t2_text_creator.png</string>
-  </Textures>
-  <SoundFileName>.\Predestined Fate.mp3</SoundFileName>
+  <Textures />
+  <SoundFileName>.\03_checker_room.glsl</SoundFileName>
 </DemoData>

@@ -90,7 +90,7 @@ float window(vec3 roofPos, vec3 dir)
 	
 	// We've hit the plane. If we've hit the window, but
 	// not the beams, return no hit.
-	float spread = 0.81;
+	float spread = mix(0.0, 0.81, max(0.0, 1.0-uFade));
 	vec2 pos = roofPos.xz + dist*dir.xz;	//go to position of the roof
 	vec2 window = abs(pos) - spread;	//abs -> limit spread
 
@@ -179,7 +179,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 	// white window -> no hit
 	if (d == INF)
 	{
-		fragColor = vec4(mix(1.0, 0.0, uFade));
+		fragColor = vec4(1.0);
 		return;
 	}
 
@@ -189,6 +189,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
 	vec3 col = vec3(0.0);
 
+	//scatter direction based on the rotation of the window
 	float xsDir = uWindowRotation < 0 ? 1.0 : -1.0;
 	float ysDir = 0.6;
 	float zsDir = 0;

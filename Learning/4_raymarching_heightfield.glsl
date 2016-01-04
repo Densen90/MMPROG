@@ -4,7 +4,7 @@ uniform sampler2D tex;
 uniform sampler2D tex2;
 in vec2 uv;
 
-#define DELTA 0.1
+#define DELTA 0.001
 #define AMBIENT 0.2
 #define HEIGHTSCALE 4.0
 #define YSHIFT 1.0
