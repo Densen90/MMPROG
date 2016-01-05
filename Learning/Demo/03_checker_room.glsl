@@ -1,17 +1,24 @@
 uniform vec2 iResolution;
 uniform float iGlobalTime;
+uniform float uFade;
 uniform sampler2D tex0;
 uniform sampler2D tex1;
 in vec2 uv;
 
+const float moveSpeed = 2.5;
 const int maxSteps = 256;
-const float ambient = 0.2;
+const float pi = 3.14159;
+const float ambient = 0.1;
+const float brightness = 3.0;
 const float epsilon = 0.0001;
-const float maxDepth = 100.0;
+const float maxDepth = 60.0;
 const float aoSamples = 5.0;
 const vec3 diffuse = vec3(1, 1, 1);
 const vec3 lightCol = vec3(1,1,1);
 const vec3 lightDir = normalize(vec3(0.5, 0.5, 1.0));
+const vec3 lightDir2 = normalize(vec3(-0.5, 0.5, 1.0));
+
+vec3 color = vec3(1.0);
 
 struct Camera
 {
@@ -26,40 +33,77 @@ float distPlane( vec3 p, vec3 n, float y )
 	return dot(p,n) - y;
 }
 
+// give the distance from point p to a sphere surface at origin
+float distSphere(vec3 p, float rad)
+{
+	return length(p) - rad;
+}
+
 float distBox(vec3 point, vec3 center, vec3 b )
 {
   return length(max(abs(point - center) - b, vec3(0.0)));
 }
 
-vec3 pointRepetitionXZ(vec3 point, vec3 c)
+vec3 pointRepetition(vec3 point, vec3 c)
 {
 	point.x = mod(point.x, c.x) - 0.5*c.x;
 	point.z = mod(point.z, c.z) - 0.5*c.z;
 	return point;
 }
 
+// Rotation / Translation of a point p with rotation r
+vec3 rotate( vec3 p, vec3 r )
+{
+	r.x *= pi/180.0;
+	r.y *= pi/180.0;
+	r.z *= pi/180.0;
+
+	mat3 xRot = mat3 (	1,	0,				0,
+						0,	cos(r.x),	-sin(r.x),
+						0,	sin(r.x),	cos(r.x) );
+	mat3 yRot = mat3 ( 	cos(r.y),		0,	sin(r.y),
+						0,					1,	0,
+						-sin(r.y),		0,	cos(r.y) );
+	mat3 zRot = mat3 (	cos(r.z),	-sin(r.z),	0,
+						sin(r.z),	cos(r.z),	0,
+						0,				0,				1 );
+	return xRot * yRot * zRot * p;
+}
+
 float distanceField(vec3 p)
 {
-	float bound = 1.0;
-	// if(p.y<-bound || p.y>bound) return maxDepth;
-
 	vec3 point = p;
-	// point.y += sin(point.z - iGlobalTime * 6.0) * cos(point.x - iGlobalTime) * .25; //waves!
-	// point.y += texture2D(tex0, vec2(mod(p.x/50.0, 1.0), mod(p.z/50.0, 1.0)))*0.125;
-	float ret = distPlane(point, normalize(vec3(0, 1, 0)), -0.499);
+	float expansion = 4.5;
+	vec3 repPoint = pointRepetition(p, vec3(expansion, 0.0, expansion));
+	vec3 repPoint2 = pointRepetition(p-vec3(0,0,expansion/2.0), vec3(expansion, 0.0, expansion));
+	vec3 repPointSphere = pointRepetition(p-vec3(cos(iGlobalTime*moveSpeed*0.5)*expansion/4.0,0,0), vec3(expansion, 0, expansion));
+	vec3 repPointSphere2 = pointRepetition(p-vec3(sin(iGlobalTime*moveSpeed*0.5)*expansion/4.0,0,expansion/2.0), vec3(expansion, 0, expansion));
 
-	float expansion = 0.4;
-	vec3 repet = pointRepetitionXZ(p, vec3(expansion, 0.0, expansion));
-	vec3 dimen = vec3(expansion/4.0, 0.75 * (0.5*(sin(iGlobalTime+repet.x*2)+1.0)), expansion/4.0);
+	vec3 boxDimension1 = vec3(expansion/4.0, (0.5*(cos(iGlobalTime*moveSpeed+repPoint.x)+1.0)), (0.5*(cos(iGlobalTime*moveSpeed+repPoint.y)+1.0)));
+	vec3 boxDimension2 = vec3(expansion/4.0, (0.5*(sin(iGlobalTime*moveSpeed+repPoint.x)+1.0)), (0.5*(sin(iGlobalTime*moveSpeed+repPoint.y)+1.0)));
+	vec3 spherePos = vec3(repPointSphere.x, repPoint.y-(0.5*(cos(iGlobalTime*moveSpeed+repPoint.x)+1.0))+0.3, repPointSphere.z);
+	vec3 spherePos2 = vec3(repPointSphere2.x, repPoint2.y-(0.5*(sin(iGlobalTime*moveSpeed+repPoint2.x)+1.0))+0.3, repPointSphere2.z);
 
-	ret = min(ret, distBox(repet, vec3(0, -0.5, 0), dimen));
+	float plane = distPlane(point, normalize(vec3(0, 1, 0)), -0.5);
+	float boxes = distBox(repPoint, vec3(0, -0.5, 0), boxDimension1);
+	float boxes2 = distBox(repPoint2, vec3(0, -0.5, 0), boxDimension2);
+	float spheres = distSphere(spherePos, 0.2);
+	float spheres2 = distSphere(spherePos2, 0.2);
+
+	float ret = min(plane, min(boxes, min(boxes2,min(spheres, spheres2))));
+
+	if(ret==plane) color = vec3(1.0);
+	else if(ret==boxes) color = vec3(0.8, 0.5, 0.6);
+	else if(ret==boxes2) color = vec3(0.5, 0.4, 0.8);
+	else if(ret==spheres) color = vec3(0.5, 0.7, 0.4);
+	else if(ret==spheres2) color = vec3(0.8, 0.8, 0.3);
 
 	return ret;
 }
 
 // marching along the ray at step sizes, 
 // and checking whether or not the surface is within a given threshold
-vec4 raymarch(vec3 rayOrigin, vec3 rayDir, out float steps)
+vec4 raymarch(vec3 rayOrigin, vec3 rayDir, out int steps)
 {
 	float totalDist = 0.0;
 	for(int j=0; j<maxSteps; j++)
@@ -120,10 +164,11 @@ float ambientOcclusion(vec3 p, vec3 n)
 //calculatte the color, the shadow, the lighting for a position
 vec3 shading(vec3 pos, vec3 rd, vec3 n)
 {
-	vec3 light = max(ambient, dot(n, lightDir)) * lightCol;	//lambert light with light Color
-	light *= diffuse;	//diffuse lighting, area lit lighting
-	light *= shadow(pos, lightDir);	//add shadow
-	light += ambientOcclusion(pos, n) * ambient;
+	vec3 lDir = pos.x > 0 ? lightDir : lightDir2;	//little trick to simulate two lights -> choose which light source depending on position
+	vec3 light = max(ambient*brightness, dot(n, lDir)) * lightCol;	//lambert light with light Color
+	light *= shadow(pos, lDir);	//add shadow
+
+	light += ambientOcclusion(pos, n) * ambient*brightness;
 	// light *= texture2D(tex0, pos.xz/5.0);
 	return light;
 }
@@ -134,18 +179,27 @@ void main()
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
-	cam.pos = vec3(0,0,iGlobalTime);
-	cam.dir = normalize(vec3( p.x, p.y, 1 ));
+	cam.pos = vec3(0,0,iGlobalTime*moveSpeed*2);
+	cam.dir = rotate(normalize(vec3( p.x, p.y, 1 )), vec3(0, 0, 0));
 
 	vec4 res;
-	float steps;
+	int steps;
 	res = raymarch(cam.pos, cam.dir, steps);
-	res.xyz = (res.a==1.0) ? clamp(shading(res.xyz, cam.dir, getNormal(res.xyz)), 0.0, 1.0) : vec3(1);
+	vec3 currentCol = color; //save the color, the global color changes in shading (shadow & AO)
+
+	if(res.a==1.0 || uFade>0.9)
+	{
+		currentCol *= clamp(shading(res.xyz, cam.dir, getNormal(res.xyz)), 0.0, 1.0);
+	}
+	else
+	{
+		currentCol = vec3(1);
+	}
 
 	//fog
 	vec3 fogColor = vec3(1);
-	float fogDist = 100;
-	res.xyz = mix(res.xyz, fogColor, steps/fogDist);
+	float fogDist = 200.0;
+	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist)+uFade, 0, 1));
 
-	gl_FragColor = vec4(res.xyz, 1.0);
+	gl_FragColor = vec4(currentCol, 1.0);
 }

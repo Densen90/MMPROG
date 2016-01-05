@@ -169,6 +169,18 @@
           <Value>0</Value>
         </Keyframe>
         <Keyframe>
+          <Time>36.74</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>36.7509766</Time>
+          <Value>1</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>38.41762</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
           <Time>138.64</Time>
           <Value>0</Value>
         </Keyframe>
@@ -182,11 +194,11 @@
     </ShaderPathRatio>
     <ShaderPathRatio>
       <ShaderPath>.\02_scatter_room.glsl</ShaderPath>
-      <Ratio>0.193020716</Ratio>
+      <Ratio>0.180836976</Ratio>
     </ShaderPathRatio>
     <ShaderPathRatio>
       <ShaderPath>.\03_checker_room.glsl</ShaderPath>
-      <Ratio>0.7230098</Ratio>
+      <Ratio>0.7349206</Ratio>
     </ShaderPathRatio>
   </ShaderRatios>
   <Textures>

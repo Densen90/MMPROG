@@ -11,7 +11,7 @@ uniform float uFade;
 
 #define INF 1.0e38
 #define PI 3.14159
-#define SCATTER_STEPS 128
+#define SCATTER_STEPS 80
 #define SCATTERPOWER 0.5
 
 float hash (float n)
@@ -156,7 +156,8 @@ vec3 inscatter (vec3 ro, vec3 rd, vec3 scatterDir, float hit, vec2 screenPos)
 		float l = raycast(pos, scatterDir, true) == INF ? 1.0 : 0.0;
 		light += l;
 		//particles only if they are in the godray
-		light += particles(pos)*l;
+		//COMMENTED OUT BECAUSE OF PERFORMANCE
+		// light += particles(pos)*l;
 		pos += step;
 	}
 
