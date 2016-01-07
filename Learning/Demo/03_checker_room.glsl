@@ -1,8 +1,7 @@
 uniform vec2 iResolution;
 uniform float iGlobalTime;
 uniform float uFade;
-uniform sampler2D tex0;
-uniform sampler2D tex1;
+uniform sampler2D tex3;
 in vec2 uv;
 
 const float moveSpeed = 2.5;
@@ -200,6 +199,8 @@ void main()
 	vec3 fogColor = vec3(1);
 	float fogDist = 200.0;
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist)+uFade, 0, 1));
+
+	currentCol *= texture2D(tex3, uv);
 
 	gl_FragColor = vec4(currentCol, 1.0);
 }
