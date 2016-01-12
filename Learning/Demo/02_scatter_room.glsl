@@ -5,13 +5,13 @@ uniform float iGlobalTime;
 
 uniform float uCameraZ;
 uniform float uScatterPower;
-uniform float uWindowRotation;
-uniform float uWindowXRotation;
+uniform float uZRotation;
+uniform float uXRotation;
 uniform float uFade;
 
 #define INF 1.0e38
 #define PI 3.14159
-#define SCATTER_STEPS 80
+#define SCATTER_STEPS 256
 #define SCATTERPOWER 0.5
 
 float hash (float n)
@@ -115,8 +115,8 @@ float raycast (vec3 ro, vec3 rd, bool scatter)
 	//Raycasting with two planes (Floor and roof)
 	float dist = INF;
 
-	vec3 roRot = rotate(ro, vec3(uWindowXRotation, 0, uWindowRotation));
-	vec3 rdRot = rotate(rd, vec3(uWindowXRotation, 0, uWindowRotation));
+	vec3 roRot = rotate(ro, vec3(uXRotation, 0, uZRotation));
+	vec3 rdRot = rotate(rd, vec3(uXRotation, 0, uZRotation));
 
 	vec3 windowPos = vec3(0,-1,0.1);
 
@@ -191,15 +191,15 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 	vec3 col = vec3(0.0);
 
 	//scatter direction based on the rotation of the window
-	float xsDir = uWindowRotation < 0 ? 1.0 : -1.0;
+	float xsDir = uZRotation < 0 ? 1.0 : -1.0;
 	float ysDir = 0.6;
 	float zsDir = 0;
 
-	if(uWindowRotation == 0)
+	if(uZRotation == 0)
 	{
 		xsDir = 0.0; ysDir = 0.6; zsDir = 1.0;
 	}
-	if(uWindowXRotation == 90) ysDir = 0.0;
+	if(uXRotation == 90) ysDir = 0.0;
 
 	vec3 scatterDir = vec3(xsDir, ysDir, zsDir);
 

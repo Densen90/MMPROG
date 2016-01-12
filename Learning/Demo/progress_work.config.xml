@@ -104,7 +104,7 @@
       </Keyframes>
     </SerializableUniform>
     <SerializableUniform>
-      <UniformName>uWindowRotation</UniformName>
+      <UniformName>uZRotation</UniformName>
       <Keyframes>
         <Keyframe>
           <Time>0</Time>
@@ -115,28 +115,64 @@
           <Value>90</Value>
         </Keyframe>
         <Keyframe>
-          <Time>23.3162136</Time>
+          <Time>23.31621</Time>
           <Value>-90</Value>
         </Keyframe>
         <Keyframe>
-          <Time>30.8865051</Time>
+          <Time>30.88651</Time>
           <Value>0</Value>
         </Keyframe>
         <Keyframe>
-          <Time>138.64</Time>
+          <Time>37</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>37.03661</Time>
+          <Value>45</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>38.7</Time>
+          <Value>45</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>40.1</Time>
+          <Value>256</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>41.3</Time>
+          <Value>120</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>42.3</Time>
+          <Value>160</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>43.1</Time>
+          <Value>70</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>43.7</Time>
+          <Value>30</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>44.5</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>46.3</Time>
           <Value>0</Value>
         </Keyframe>
       </Keyframes>
     </SerializableUniform>
     <SerializableUniform>
-      <UniformName>uWindowXRotation</UniformName>
+      <UniformName>uXRotation</UniformName>
       <Keyframes>
         <Keyframe>
           <Time>0</Time>
           <Value>0</Value>
         </Keyframe>
         <Keyframe>
-          <Time>30.8865051</Time>
+          <Time>30.88651</Time>
           <Value>0</Value>
         </Keyframe>
         <Keyframe>
@@ -144,8 +180,44 @@
           <Value>90</Value>
         </Keyframe>
         <Keyframe>
-          <Time>138.64</Time>
+          <Time>37</Time>
           <Value>90</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>37.03661</Time>
+          <Value>45</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>38.7</Time>
+          <Value>45</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>40.1</Time>
+          <Value>256</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>41.3</Time>
+          <Value>150</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>42.3</Time>
+          <Value>240</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>43.1</Time>
+          <Value>210</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>43.7</Time>
+          <Value>300</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>44.5</Time>
+          <Value>360</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>46.3</Time>
+          <Value>360</Value>
         </Keyframe>
       </Keyframes>
     </SerializableUniform>
@@ -161,11 +233,11 @@
           <Value>0</Value>
         </Keyframe>
         <Keyframe>
-          <Time>11.6771431</Time>
+          <Time>11.67714</Time>
           <Value>1</Value>
         </Keyframe>
         <Keyframe>
-          <Time>15.4086552</Time>
+          <Time>15.40866</Time>
           <Value>0</Value>
         </Keyframe>
         <Keyframe>
@@ -173,7 +245,7 @@
           <Value>0</Value>
         </Keyframe>
         <Keyframe>
-          <Time>36.7509766</Time>
+          <Time>36.75098</Time>
           <Value>1</Value>
         </Keyframe>
         <Keyframe>
@@ -181,8 +253,303 @@
           <Value>0</Value>
         </Keyframe>
         <Keyframe>
+          <Time>61.69169</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>63.5</Time>
+          <Value>1</Value>
+        </Keyframe>
+      </Keyframes>
+    </SerializableUniform>
+    <SerializableUniform>
+      <UniformName>uBeatValue</UniformName>
+      <Keyframes>
+        <Keyframe>
+          <Time>0</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>38.4975243</Time>
+          <Value>0.491040081</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>38.86769</Time>
+          <Value>0.9769223</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>39.36375</Time>
+          <Value>0.3</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>39.88142</Time>
+          <Value>0.7407295</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>40.3470421</Time>
+          <Value>0.3</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>40.81425</Time>
+          <Value>0.6</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>41.3307533</Time>
+          <Value>0.380816817</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>41.83029</Time>
+          <Value>1.2</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>42.2975845</Time>
+          <Value>0.8577012</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>42.7487946</Time>
+          <Value>1.63826191</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>43.2308159</Time>
+          <Value>0.745228469</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>43.71367</Time>
+          <Value>1</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>44.1805</Time>
+          <Value>0.239101171</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>44.63088</Time>
+          <Value>0.763224065</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>45.1475029</Time>
+          <Value>0.605762243</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>45.63094</Time>
+          <Value>1.05565321</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>46.1302948</Time>
+          <Value>0.218856081</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>46.61413</Time>
+          <Value>0.8127121</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>47.0809174</Time>
+          <Value>0.49328953</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>47.54744</Time>
+          <Value>1.5</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>48.01419</Time>
+          <Value>0.6844932</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>48.48044</Time>
+          <Value>0.938681543</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>48.9640846</Time>
+          <Value>0.57651937</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>49.41369</Time>
+          <Value>1.10964012</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>49.91421</Time>
+          <Value>0.389814615</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>50.3805</Time>
+          <Value>0.943180442</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>50.8803329</Time>
+          <Value>0.7519768</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>51.347126</Time>
+          <Value>1.47855067</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>51.8130836</Time>
+          <Value>0.2818408</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>52.2980843</Time>
+          <Value>0.7812197</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>52.7975426</Time>
+          <Value>0.590016067</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>53.2970428</Time>
+          <Value>1.45380664</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>53.7970619</Time>
+          <Value>0.9004408</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>54.281002</Time>
+          <Value>1.19511938</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>54.749794</Time>
+          <Value>0.231489569</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>55.21367</Time>
+          <Value>0.713736057</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>55.680397</Time>
+          <Value>0.540528059</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>56.1641273</Time>
+          <Value>1.15462923</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>56.6804161</Time>
+          <Value>0.9071892</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>57.16417</Time>
+          <Value>1.336835</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>57.6641273</Time>
+          <Value>0.6822437</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>58.13223</Time>
+          <Value>1.45155716</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>58.6303978</Time>
+          <Value>0.880195737</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>59.09748</Time>
+          <Value>1.064651</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>59.58123</Time>
+          <Value>0.243600085</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>60.0809174</Time>
+          <Value>0.419057548</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>60.5641251</Time>
+          <Value>0.1536219</Value>
+        </Keyframe>
+        <Keyframe>
           <Time>138.64</Time>
           <Value>0</Value>
+        </Keyframe>
+      </Keyframes>
+    </SerializableUniform>
+    <SerializableUniform>
+      <UniformName>uBoxYPos</UniformName>
+      <Keyframes>
+        <Keyframe>
+          <Time>0</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>37.03661</Time>
+          <Value>3.5</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>38.7</Time>
+          <Value>-0.14</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>39.4</Time>
+          <Value>1.2</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>40.1</Time>
+          <Value>-0.14</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>40.7</Time>
+          <Value>0.6</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>41.3</Time>
+          <Value>-0.14</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>41.8</Time>
+          <Value>0.3</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>42.3</Time>
+          <Value>-0.14</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>42.7</Time>
+          <Value>0.2</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>43.1</Time>
+          <Value>-0.14</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>43.4</Time>
+          <Value>0.1</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>43.7</Time>
+          <Value>-0.14</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>44.5</Time>
+          <Value>-0.22</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>58.8</Time>
+          <Value>-0.22</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>61.69169</Time>
+          <Value>2.2</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>61.7</Time>
+          <Value>10</Value>
+        </Keyframe>
+      </Keyframes>
+    </SerializableUniform>
+    <SerializableUniform>
+      <UniformName>uCameraXRot</UniformName>
+      <Keyframes>
+        <Keyframe>
+          <Time>0</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>61.69169</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>63.5</Time>
+          <Value>40</Value>
         </Keyframe>
       </Keyframes>
     </SerializableUniform>
@@ -198,13 +565,14 @@
     </ShaderPathRatio>
     <ShaderPathRatio>
       <ShaderPath>.\03_checker_room.glsl</ShaderPath>
-      <Ratio>0.7349206</Ratio>
+      <Ratio>0.735229731</Ratio>
     </ShaderPathRatio>
   </ShaderRatios>
   <Textures>
     <string>.\t0_black.png</string>
     <string>.\t1_text_interpret.png</string>
     <string>.\t2_text_creator.png</string>
+    <string>.\t3_vignette.png</string>
   </Textures>
   <SoundFileName>.\Predestined Fate.mp3</SoundFileName>
 </DemoData>
