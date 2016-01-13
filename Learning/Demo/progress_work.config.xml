@@ -260,6 +260,10 @@
           <Time>63.5</Time>
           <Value>1</Value>
         </Keyframe>
+        <Keyframe>
+          <Time>67</Time>
+          <Value>0</Value>
+        </Keyframe>
       </Keyframes>
     </SerializableUniform>
     <SerializableUniform>
@@ -565,7 +569,11 @@
     </ShaderPathRatio>
     <ShaderPathRatio>
       <ShaderPath>.\03_checker_room.glsl</ShaderPath>
-      <Ratio>0.735229731</Ratio>
+      <Ratio>0.193654269</Ratio>
+    </ShaderPathRatio>
+    <ShaderPathRatio>
+      <ShaderPath>.\04_cube_deformation.glsl</ShaderPath>
+      <Ratio>0.5415755</Ratio>
     </ShaderPathRatio>
   </ShaderRatios>
   <Textures>

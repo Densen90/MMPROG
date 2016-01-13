@@ -1,0 +1,10 @@
+Chasing the Cube:
+
+- Boxen als Leitmotive
+- Verfolgung eines refraktiven Würfels
+- 1.Shader --> Erstes Sehen des Cubes im Light Scatter, nicht refraktiv, geblendet, Cube verloren
+- 2.Shader --> er kommt von oben, Verfolgung, TODO: CUBE ZIEHT WEG VON KAMERA; KAMERA SCHNELLER HINTERHER!, cube fliegt nach oben weg, kamera folgt cube
+
+TODO:
+- 3. Shader --> Cube fliegt im Mengersponge an Kamera vorbei, dreht um eigene Achse, Kamera verfolgt Cube im Mengersponge
+- 4. Shader --> Cube fliegt in See/Loch, zerspringt in mehrere Teile, ist kaputt, verschwindet

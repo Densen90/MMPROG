@@ -232,11 +232,11 @@ void main()
 			float st;
 			//first intersection --> inside the cube, air to water
 			vec3 n = getNormal(res.xyz);
-			vec3 refractDir = normalize(refract(cam.dir, n, 0.6));
+			vec3 refractDir = normalize(refract(cam.dir, n, 1.0/1.3));
 			res = raymarch(res.xyz - 0.01*n, refractDir, st);
 			//second intersection --> outside of cube, water to air
 			n = -getNormal(res.xyz);
-			refractDir = normalize(refract(refractDir, n, 1.5));
+			refractDir = normalize(refract(refractDir, n, 1.3/1.0));
 			res = raymarch(res.xyz - 0.01*n, refractDir, st);
 			currentCol += res.a==1.0 ? shading(res.xyz, refractDir, n) : vec3((uv.x-p.x)*1.6);
 
