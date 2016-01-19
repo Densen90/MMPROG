@@ -105,6 +105,9 @@ float distanceField(vec3 p)
 	float boxes = distBox(repPoint, vec3((1.6-beatValue1)*0.25, -0.5, 0), boxDimension1);
 	float boxes2 = distBox(repPoint2, vec3(0, -0.5, 0), boxDimension2);
 
+	boxes = distRoundBox(repPoint-vec3((1.6-beatValue1)*0.25, -0.5, 0), boxDimension1, 0.01);
+	boxes2 = distRoundBox(repPoint2-vec3(0, -0.5, 0), boxDimension2, 0.01);
+
 	float spheres = distSphere(spherePos, 0.2);
 	float spheres2 = distSphere(spherePos2, 0.2);
 

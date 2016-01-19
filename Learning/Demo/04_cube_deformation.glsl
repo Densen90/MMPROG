@@ -2,12 +2,20 @@ uniform vec2 iResolution;
 uniform float iGlobalTime;
 uniform float uMengerParam;
 uniform float uFade;
+uniform float uSplit;
+
+uniform float uCameraX, uCameraY, uCameraZ;
+uniform float uCameraXRot, uCameraYRot, uCameraZRot;
+
+uniform float uR, uG, uB;
+
+uniform float uBoxXPos, uBoxYPos, uBoxZPos;
 in vec2 uv;
 
 const int maxSteps = 256;
 const float pi = 3.14159;
 const float ambient = 0.1;
-const float brightness = 3.0;
+const float brightness = 5.0;
 const float epsilon = 0.0001;
 const float maxDepth = 60.0;
 const float aoSamples = 5.0;
@@ -42,6 +50,11 @@ vec3 rotate( vec3 p, vec3 r )
 	return xRot * yRot * zRot * p;
 }
 
+float distRoundBox(vec3 p, vec3 b, float r)
+{
+ 	return length(max(abs(p)-b,0.0))-r;
+}
+
 float Cross(vec3 p)
 {
    p = abs(p);
@@ -71,6 +84,23 @@ float distanceField(vec3 p)
       dist = max(dist, -CrossRepScale(p, scale));
       scale *= 3;
    	}
+
+   	vec3 boxPos = vec3(uBoxXPos, uBoxYPos, uBoxZPos);
+   	if(uSplit<1.0)
+   	{
+   		float dBox = distRoundBox(p- boxPos, vec3(0.5), 0.25);
+	   	dist = min(dist, dBox);
+   	}
+   	else
+   	{
+   		float timeZero = iGlobalTime-83.50;
+   		float dBox1 = distRoundBox(p - boxPos - vec3(timeZero*10,0,0), vec3(0.5), 0.25);
+   		float dBox2 = distRoundBox(p - boxPos + vec3(timeZero*10,0,0), vec3(0.5), 0.25);
+   		float dBox3 = distRoundBox(p - boxPos - vec3(0,0,timeZero*10), vec3(0.5), 0.25);
+   		float dBox4 = distRoundBox(p - boxPos + vec3(0,0,timeZero*10), vec3(0.5), 0.25);
+		dist = min(dist, min(dBox1, min(dBox2, min(dBox3, dBox4))));
+	}
+   	
    	return dist;
 }
 
@@ -149,8 +179,12 @@ void main()
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
-	cam.pos = vec3(0,0,iGlobalTime*(iGlobalTime/10.0));
-	cam.dir = normalize(vec3( p.x, p.y, 1 ));
+	cam.pos = vec3(uCameraX,uCameraY,uCameraZ);
+	cam.dir = rotate( rotate( rotate( 
+				normalize(vec3( p.x, p.y, 1 )),
+				vec3(uCameraXRot,0,0)),
+				vec3(0,uCameraYRot,0)),
+				vec3(0,0,uCameraZRot));
 
 	vec4 res;
 	int steps;
@@ -163,12 +197,13 @@ void main()
 	}
 	else	//background
 	{
-		currentCol = vec3(uFade);
+		currentCol = vec3(uR, uG, uB);
 	}
 
 	//fog
-	vec3 fogColor = vec3(0.0);
-	float fogDist = 50.0;
+	vec3 fogColor = vec3(uR, uG, uB);
+	// fogColor = vec3(0.1, 0.6, 0.4);
+	float fogDist = 70.0;
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist), 0, 1));
 	currentCol = mix(vec3(uFade), currentCol, 1.0-uFade);
 

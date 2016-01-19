@@ -11,8 +11,7 @@ uniform float uFade;
 
 #define INF 1.0e38
 #define PI 3.14159
-#define SCATTER_STEPS 256
-#define SCATTERPOWER 0.5
+#define SCATTER_STEPS 356
 
 float hash (float n)
 {
@@ -148,7 +147,7 @@ vec3 inscatter (vec3 ro, vec3 rd, vec3 scatterDir, float hit, vec2 screenPos)
 	float light = 0.0;
 	
 	// add noise to the start position to hide banding
-	pos += rd*noise(vec3(2.0*screenPos, 0.0))*0.1;
+	pos += rd*noise(vec3(2.0*screenPos, 0.0))*0.05;
 
 	for(int i = 0; i < SCATTER_STEPS; i++)
 	{
