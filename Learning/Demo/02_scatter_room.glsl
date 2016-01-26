@@ -109,6 +109,28 @@ float wall(float wallDist, float dirY)
 	return floorHit < 0.0 ? INF : floorHit;
 }
 
+float box(vec3 org, vec3 dir, vec3 size)
+{
+	// compute intersection of ray with all six bbox planes
+	vec3 invR = 1.0 / dir;
+	vec3 tbot = invR * (-0.5*size - org);
+	vec3 ttop = invR * (0.5*size - org);
+	
+	// re-order intersections to find smallest and largest on each axis
+	vec3 tmin = min (ttop, tbot);
+	vec3 tmax = max (ttop, tbot);
+	
+	// find the largest tmin and the smallest tmax
+	vec2 t0 = max (tmin.xx, tmin.yz);
+	float near;
+	near = max (t0.x, t0.y);
+	t0 = min (tmax.xx, tmax.yz);
+	float far = min (t0.x, t0.y);
+
+	// check for hit
+	return near < far && far > 0.0 ? near : INF;
+}
+
 float raycast (vec3 ro, vec3 rd, bool scatter)
 {
 	//Raycasting with two planes (Floor and roof)
@@ -122,7 +144,9 @@ float raycast (vec3 ro, vec3 rd, bool scatter)
 	//check if hit is at the World Position of RoofPosition
 	vec3 roofPos = roRot+windowPos;
 	vec3 rayDir = rdRot;
+	// dist = min(dist, box(vec3(0,0,-1), rd, vec3(0.2,0.2,0.2)));
 	dist = min(dist, window(roofPos, rayDir));
+	
 	
 	// Distance wall to window
 	float wallDist = 0.95;

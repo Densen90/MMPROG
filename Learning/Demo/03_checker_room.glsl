@@ -1,11 +1,13 @@
 uniform vec2 iResolution;
 uniform float iGlobalTime;
+uniform float uHeight;
+uniform float uTwist;
 uniform float uFade;
 uniform float uBeatValue;
 uniform float uBoxYPos;
 uniform float uXRotation;
 uniform float uZRotation;
-uniform float uCameraXRot;
+uniform float uCameraXRot, uCameraZRot;
 uniform sampler2D tex3;
 uniform sampler2D tex4;
 in vec2 uv;
@@ -82,6 +84,20 @@ vec3 rotate( vec3 p, vec3 r )
 	return xRot * yRot * zRot * p;
 }
 
+// twist the object
+vec3 opTwist( vec3 p, float amount )
+{
+    float c = cos(amount*p.y);
+    float s = sin(amount*p.y);
+    mat2  m = mat2(c,-s,s,c);
+    return vec3(m*p.xz,p.y);
+}
+
+float opUnionRound(float a, float b, float r) {
+	vec2 u = max(vec2(r - a,r - b), vec2(0));
+	return max(r, min (a, b)) - length(u);
+}
+
 float distanceField(vec3 p)
 {
 	hitRefractionBox = 0;
@@ -111,10 +127,13 @@ float distanceField(vec3 p)
 	float spheres = distSphere(spherePos, 0.2);
 	float spheres2 = distSphere(spherePos2, 0.2);
 
-	vec3 refboxpos = rotate(p-cam.pos-vec3(0,uBoxYPos,2.5), vec3(uXRotation,0,uZRotation));
-	float refBox = distRoundBox(refboxpos, vec3(0.15), 0.15);
+	vec3 refboxpos = rotate(p-cam.pos-vec3(0,uBoxYPos-(0.15-uHeight),2.5), vec3(uXRotation,0,uZRotation));
+	// refboxpos = opTwist(r efboxpos.xzy , uTwist);
+	float refBox = distRoundBox(refboxpos, vec3(0.15*(0.15/uHeight), uHeight, 0.15), 0.15);
 
-	float ret = min(refBox, min(plane, min(boxes, min(boxes2,min(spheres, spheres2)))));
+	plane = opUnionRound(plane, boxes, 0.7);
+	plane = opUnionRound(plane, boxes2, 0.7);
+	float ret = min(refBox, min(plane, min(spheres, spheres2)));
 
 	if(ret==plane) color = vec3(1.0);
 	else if(ret==boxes) color = vec3(0.5*(sin(beatValue1)+1.0), 0.6, 0.5*(cos(beatValue1)+1.0));
@@ -216,7 +235,7 @@ void main()
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
 	cam.pos = vec3(0,0,iGlobalTime*4.0);
-	cam.dir = rotate(normalize(vec3( p.x, p.y, 1 )), vec3(uCameraXRot, 0, 0));
+	cam.dir = rotate(normalize(vec3( p.x, p.y, 1 )), vec3(uCameraXRot, 0, uCameraZRot));
 
 	vec4 res;
 	int steps;
@@ -247,13 +266,14 @@ void main()
 	}
 	else	//background
 	{
-		currentCol = vec3((uv.x-p.x)*1.6);
+		// currentCol = vec3((uv.x-p.x)*1.6);
+		currentCol = texture2D(tex4, uv);
 	}
 
 	//fog
 	vec3 fogColor = vec3(1.0);
 	float fogDist = 200.0;
-	currentCol *= texture2D(tex3, uv);	//vignette
+	// currentCol *= texture2D(tex3, uv);	//vignette
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist)+uFade, 0, 1));
 
 	
