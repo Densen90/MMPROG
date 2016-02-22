@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<DemoData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<DemoData2 xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Uniforms>
-    <SerializableUniform>
+    <Uniform>
       <UniformName>uCameraX</UniformName>
       <Keyframes>
         <Keyframe>
@@ -37,8 +37,8 @@
           <Value>0</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uCameraY</UniformName>
       <Keyframes>
         <Keyframe>
@@ -78,8 +78,8 @@
           <Value>0</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uCameraZ</UniformName>
       <Keyframes>
         <Keyframe>
@@ -110,9 +110,17 @@
           <Time>85.12982</Time>
           <Value>-2</Value>
         </Keyframe>
+        <Keyframe>
+          <Time>98.87526</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>107.642494</Time>
+          <Value>155</Value>
+        </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uCameraXRot</UniformName>
       <Keyframes>
         <Keyframe>
@@ -148,8 +156,8 @@
           <Value>0</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uCameraYRot</UniformName>
       <Keyframes>
         <Keyframe>
@@ -173,8 +181,8 @@
           <Value>0</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uCameraZRot</UniformName>
       <Keyframes>
         <Keyframe>
@@ -234,8 +242,8 @@
           <Value>360</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uBoxXPos</UniformName>
       <Keyframes>
         <Keyframe>
@@ -275,8 +283,8 @@
           <Value>0</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uBoxYPos</UniformName>
       <Keyframes>
         <Keyframe>
@@ -384,8 +392,8 @@
           <Value>-0.22</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uBoxZPos</UniformName>
       <Keyframes>
         <Keyframe>
@@ -401,8 +409,8 @@
           <Value>0</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uZRotation</UniformName>
       <Keyframes>
         <Keyframe>
@@ -462,8 +470,8 @@
           <Value>0</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uScatterPower</UniformName>
       <Keyframes>
         <Keyframe>
@@ -547,8 +555,8 @@
           <Value>5</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uXRotation</UniformName>
       <Keyframes>
         <Keyframe>
@@ -604,8 +612,8 @@
           <Value>360</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uFade</UniformName>
       <Keyframes>
         <Keyframe>
@@ -660,9 +668,17 @@
           <Time>85.85785</Time>
           <Value>0</Value>
         </Keyframe>
+        <Keyframe>
+          <Time>99.8476257</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>107.354813</Time>
+          <Value>1.1</Value>
+        </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uBeatValue</UniformName>
       <Keyframes>
         <Keyframe>
@@ -862,8 +878,8 @@
           <Value>0</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uR</UniformName>
       <Keyframes>
         <Keyframe>
@@ -910,9 +926,21 @@
           <Time>80.11324</Time>
           <Value>0.4</Value>
         </Keyframe>
+        <Keyframe>
+          <Time>98.69256</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>102.548454</Time>
+          <Value>3</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>105.929558</Time>
+          <Value>1</Value>
+        </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uG</UniformName>
       <Keyframes>
         <Keyframe>
@@ -959,9 +987,21 @@
           <Time>80.11324</Time>
           <Value>0.6</Value>
         </Keyframe>
+        <Keyframe>
+          <Time>98.69256</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>102.548454</Time>
+          <Value>3</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>105.929558</Time>
+          <Value>0.6</Value>
+        </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uB</UniformName>
       <Keyframes>
         <Keyframe>
@@ -1008,9 +1048,21 @@
           <Time>80.11324</Time>
           <Value>0.4</Value>
         </Keyframe>
+        <Keyframe>
+          <Time>98.69256</Time>
+          <Value>0</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>102.548454</Time>
+          <Value>3</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>105.929558</Time>
+          <Value>0.4</Value>
+        </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uSplit</UniformName>
       <Keyframes>
         <Keyframe>
@@ -1030,8 +1082,8 @@
           <Value>0</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uHeight</UniformName>
       <Keyframes>
         <Keyframe>
@@ -1131,8 +1183,8 @@
           <Value>0.15</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
-    <SerializableUniform>
+    </Uniform>
+    <Uniform>
       <UniformName>uTwist</UniformName>
       <Keyframes>
         <Keyframe>
@@ -1148,38 +1200,51 @@
           <Value>0</Value>
         </Keyframe>
       </Keyframes>
-    </SerializableUniform>
+    </Uniform>
   </Uniforms>
-  <ShaderRatios>
-    <ShaderPathRatio>
-      <ShaderPath>.\01_startText.glsl</ShaderPath>
-      <Ratio>0.08424508</Ratio>
-    </ShaderPathRatio>
-    <ShaderPathRatio>
-      <ShaderPath>.\02_scatter_room.glsl</ShaderPath>
-      <Ratio>0.180836976</Ratio>
-    </ShaderPathRatio>
-    <ShaderPathRatio>
-      <ShaderPath>.\03_checker_room.glsl</ShaderPath>
-      <Ratio>0.193654269</Ratio>
-    </ShaderPathRatio>
-    <ShaderPathRatio>
-      <ShaderPath>.\04_cube_deformation.glsl</ShaderPath>
-      <Ratio>0.154266953</Ratio>
-    </ShaderPathRatio>
-    <ShaderPathRatio>
-      <ShaderPath>.\03_checker_room.glsl</ShaderPath>
-      <Ratio>0.105032824</Ratio>
-    </ShaderPathRatio>
-    <ShaderPathRatio>
-      <ShaderPath>.\02_scatter_room.glsl</ShaderPath>
-      <Ratio>0.109409191</Ratio>
-    </ShaderPathRatio>
-    <ShaderPathRatio>
-      <ShaderPath>.\04_cube_deformation.glsl</ShaderPath>
-      <Ratio>0.172866523</Ratio>
-    </ShaderPathRatio>
-  </ShaderRatios>
+  <Tracks>
+    <Track>
+      <Name>sum</Name>
+      <ShaderKeyframes>
+        <ShaderKeyframe>
+          <Time>0</Time>
+          <ShaderPath>.\01_startText.glsl</ShaderPath>
+        </ShaderKeyframe>
+        <ShaderKeyframe>
+          <Time>11.6904364</Time>
+          <ShaderPath>.\02_scatter_room.glsl</ShaderPath>
+        </ShaderKeyframe>
+        <ShaderKeyframe>
+          <Time>36.78464</Time>
+          <ShaderPath>.\03_checker_room.glsl</ShaderPath>
+        </ShaderKeyframe>
+        <ShaderKeyframe>
+          <Time>63.6574631</Time>
+          <ShaderPath>.\04_cube_deformation.glsl</ShaderPath>
+        </ShaderKeyframe>
+        <ShaderKeyframe>
+          <Time>85.06462</Time>
+          <ShaderPath>.\03_checker_room.glsl</ShaderPath>
+        </ShaderKeyframe>
+        <ShaderKeyframe>
+          <Time>99.7915344</Time>
+          <ShaderPath>.\05_cube_deformation_many_little.glsl</ShaderPath>
+        </ShaderKeyframe>
+        <ShaderKeyframe>
+          <Time>103.43531</Time>
+          <ShaderPath>.\03_checker_room.glsl</ShaderPath>
+        </ShaderKeyframe>
+        <ShaderKeyframe>
+          <Time>107.2309</Time>
+          <ShaderPath>.\05_cube_deformation_many_little.glsl</ShaderPath>
+        </ShaderKeyframe>
+        <ShaderKeyframe>
+          <Time>122.868759</Time>
+          <ShaderPath>.\06_final_shatter.glsl</ShaderPath>
+        </ShaderKeyframe>
+      </ShaderKeyframes>
+    </Track>
+  </Tracks>
   <Textures>
     <string>.\t0_black.png</string>
     <string>.\t1_text_interpret.png</string>
@@ -1187,4 +1252,4 @@
     <string>.\t3_vignette.png</string>
   </Textures>
   <SoundFileName>.\Predestined Fate.mp3</SoundFileName>
-</DemoData>
+</DemoData2>

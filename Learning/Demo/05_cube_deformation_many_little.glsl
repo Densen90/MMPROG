@@ -2,14 +2,10 @@ uniform vec2 iResolution;
 uniform float iGlobalTime;
 uniform float uMengerParam;
 uniform float uFade;
-uniform float uSplit;
 
-uniform float uCameraX, uCameraY, uCameraZ;
-uniform float uCameraXRot, uCameraYRot, uCameraZRot;
-
+uniform float uCameraZ;
 uniform float uR, uG, uB;
 
-uniform float uBoxXPos, uBoxYPos, uBoxZPos;
 in vec2 uv;
 
 const int maxSteps = 256;
@@ -50,6 +46,20 @@ vec3 rotate( vec3 p, vec3 r )
 	return xRot * yRot * zRot * p;
 }
 
+vec3 pointXZRepetition(vec3 point, vec3 c)
+{
+	point.x = mod(point.x, c.x) - 0.5*c.x;
+	point.z = mod(point.z, c.z) - 0.5*c.z;
+	return point;
+}
+
+vec3 pointYZRepetition(vec3 point, vec3 c)
+{
+	point.y = mod(point.y, c.y) - 0.5*c.y;
+	point.z = mod(point.z, c.z) - 0.5*c.z;
+	return point;
+}
+
 float distRoundBox(vec3 p, vec3 b, float r)
 {
  	return length(max(abs(p)-b,0.0))-r;
@@ -85,22 +95,42 @@ float distanceField(vec3 p)
       scale *= 3;
    	}
 
-   	vec3 boxPos = vec3(uBoxXPos, uBoxYPos, uBoxZPos);
-   	if(uSplit<1.0)
-   	{
-   		float dBox = distRoundBox(p- boxPos, vec3(0.5), 0.25);
-	   	dist = min(dist, dBox);
-   	}
-   	else
-   	{
-   		float timeZero = iGlobalTime-83.50;
-   		float dBox1 = distRoundBox(p - boxPos - vec3(timeZero*10,0,0), vec3(0.5), 0.25);
-   		float dBox2 = distRoundBox(p - boxPos + vec3(timeZero*10,0,0), vec3(0.5), 0.25);
-   		float dBox3 = distRoundBox(p - boxPos - vec3(0,0,timeZero*10), vec3(0.5), 0.25);
-   		float dBox4 = distRoundBox(p - boxPos + vec3(0,0,timeZero*10), vec3(0.5), 0.25);
-		dist = min(dist, min(dBox1, min(dBox2, min(dBox3, dBox4))));
-	}
+   	if(uFade<1.09) return dist;
+
+   	float boxesHorizUp1 = distRoundBox(pointXZRepetition(p-vec3(iGlobalTime*5,2.2,-5.5), vec3(2.1, 0, 20)), vec3(0.2), 0.01);
+   	float boxesHorizUp2 = distRoundBox(pointXZRepetition(p-vec3(-iGlobalTime*3,2.2,-1.3), vec3(1.3, 0, 20)), vec3(0.2), 0.01);
+   	float boxesHorizUp3 = distRoundBox(pointXZRepetition(p-vec3(iGlobalTime*7,2.2,3.3), vec3(1.7, 0, 20)), vec3(0.2), 0.01);
    	
+   	dist = min(dist, min(boxesHorizUp1, min(boxesHorizUp2, boxesHorizUp3)));
+   	
+   	float boxesHorizDown1 = distRoundBox(pointXZRepetition(p-vec3(-iGlobalTime*2,-2.2,-3.5), vec3(1.5, 0, 20)), vec3(0.2), 0.01);
+   	float boxesHorizDown2 = distRoundBox(pointXZRepetition(p-vec3(iGlobalTime*8,-2.2,1.3), vec3(2.4, 0, 20)), vec3(0.2), 0.01);
+   	float boxesHorizDown3 = distRoundBox(pointXZRepetition(p-vec3(-iGlobalTime*5,-2.2,5.3), vec3(1.3, 0, 20)), vec3(0.2), 0.01);
+   	
+   	dist = min(dist, min(boxesHorizDown1, min(boxesHorizDown2, boxesHorizDown3)));
+   	
+   	// float boxesHorizMiddle1 = distRoundBox(pointXZRepetition(p-vec3(iGlobalTime*9,0,-3.5), vec3(4, 0, 20)), vec3(0.6), 0.01);
+   	// float boxesHorizMiddle2 = distRoundBox(pointXZRepetition(p-vec3(-iGlobalTime*7,0,3.5), vec3(5, 0, 20)), vec3(0.6), 0.01);
+
+   	// dist = min(dist, min(boxesHorizMiddle1, boxesHorizMiddle2));
+   	
+   	float boxesVertLeft1 = distRoundBox(pointYZRepetition(p-vec3(-2.2,iGlobalTime*6,-3.5), vec3(0, 2.0, 20)), vec3(0.2), 0.01);
+   	float boxesVertLeft2 = distRoundBox(pointYZRepetition(p-vec3(-2.2,-iGlobalTime*2,1.3), vec3(0, 1.5, 20)), vec3(0.2), 0.01);
+   	float boxesVertLeft3 = distRoundBox(pointYZRepetition(p-vec3(-2.2,iGlobalTime*4,5.3), vec3(0, 1.7, 20)), vec3(0.2), 0.01);
+   	
+   	dist = min(dist, min(boxesVertLeft1, min(boxesVertLeft2, boxesVertLeft3)));
+   	
+   	float boxesVertRight1 = distRoundBox(pointYZRepetition(p-vec3(2.2,-iGlobalTime*3,-5.5), vec3(0, 1.8, 20)), vec3(0.2), 0.01);
+   	float boxesVertRight2 = distRoundBox(pointYZRepetition(p-vec3(2.2,iGlobalTime*8,-1.3), vec3(0, 1.2, 20)), vec3(0.2), 0.01);
+   	float boxesVertRight3 = distRoundBox(pointYZRepetition(p-vec3(2.2,-iGlobalTime*5,3.3), vec3(0, 2.2, 20)), vec3(0.2), 0.01);
+   	
+   	dist = min(dist, min(boxesVertRight1, min(boxesVertRight2, boxesVertRight3)));
+
+   	// float boxesVertMiddle1 = distRoundBox(pointYZRepetition(p-vec3(0,-iGlobalTime*8,-3.5), vec3(0, 4.3, 20)), vec3(0.6), 0.01);
+   	// float boxesVertMiddle2 = distRoundBox(pointYZRepetition(p-vec3(0,iGlobalTime*6,3.5), vec3(0, 5, 20)), vec3(0.6), 0.01);
+
+   	// dist = min(dist, min(boxesVertMiddle1, boxesVertMiddle2));
+
    	return dist;
 }
 
@@ -179,12 +209,8 @@ void main()
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
-	cam.pos = vec3(uCameraX,uCameraY,uCameraZ);
-	cam.dir = rotate( rotate( rotate( 
-				normalize(vec3( p.x, p.y, 1 )),
-				vec3(uCameraXRot,0,0)),
-				vec3(0,uCameraYRot,0)),
-				vec3(0,0,uCameraZRot));
+	cam.pos = vec3(0,0,uCameraZ);
+	cam.dir = normalize(vec3( p.x, p.y, 1 ));
 
 	vec4 res;
 	int steps;
@@ -205,7 +231,6 @@ void main()
 	// fogColor = vec3(0.1, 0.6, 0.4);
 	float fogDist = 70.0;
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist), 0, 1));
-	currentCol = mix(vec3(uFade), currentCol, 1.0-uFade);
 
 	gl_FragColor = vec4(currentCol, 1.0);
 }
