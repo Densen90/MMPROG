@@ -1,19 +1,19 @@
 uniform vec2 iResolution;
 uniform float iGlobalTime;
 uniform float uHeight;
-uniform float uTwist;
 uniform float uFade;
+uniform float uSplit;
+uniform float uRadius;
 uniform float uBeatValue;
-uniform float uBoxYPos;
+uniform float uBoxYPos, uBoxZPos;
 uniform float uXRotation;
-uniform float uZRotation;
-uniform float uCameraXRot, uCameraZRot;
+uniform float uCameraXRot;
+uniform float uCameraY, uCameraZ;
 uniform sampler2D tex3;
-uniform sampler2D tex4;
 in vec2 uv;
 
 const float moveSpeed = 4.5;
-const int maxSteps = 256;
+const int maxSteps = 512;
 const float pi = 3.14159;
 const float ambient = 0.1;
 const float brightness = 3.0;
@@ -84,15 +84,6 @@ vec3 rotate( vec3 p, vec3 r )
 	return xRot * yRot * zRot * p;
 }
 
-// twist the object
-vec3 opTwist( vec3 p, float amount )
-{
-    float c = cos(amount*p.y);
-    float s = sin(amount*p.y);
-    mat2  m = mat2(c,-s,s,c);
-    return vec3(m*p.xz,p.y);
-}
-
 float opUnionRound(float a, float b, float r) {
 	vec2 u = max(vec2(r - a,r - b), vec2(0));
 	return max(r, min (a, b)) - length(u);
@@ -104,42 +95,44 @@ float distanceField(vec3 p)
 	float beatValue1 = uBeatValue;
 	float beatValue2 = abs(1.7-uBeatValue);
 
-	vec3 point = p;
 	float expansion = 4.5;
 	vec3 repPoint = pointRepetition(p, vec3(expansion, 0.0, expansion));
 	vec3 repPoint2 = pointRepetition(p-vec3(0,0,expansion/2.0), vec3(expansion, 0.0, expansion));
 	vec3 repPointSphere = pointRepetition(p-vec3(cos(iGlobalTime*moveSpeed*0.5)*expansion/4.0 * beatValue1,0,0), vec3(expansion, 0, expansion));
 	vec3 repPointSphere2 = pointRepetition(p-vec3(sin(iGlobalTime*moveSpeed*0.5)*expansion/4.0 * beatValue1,0,expansion/2.0), vec3(expansion, 0, expansion));
 
-	vec3 boxDimension1 = vec3(expansion/4.0 * beatValue1, beatValue1, (0.5*(cos(iGlobalTime*moveSpeed+repPoint.y)+1.0+0.1)));
-	vec3 boxDimension2 = vec3(expansion/4.0 * beatValue1, beatValue2, (0.5*(sin(iGlobalTime*moveSpeed+repPoint.y)+1.0+0.1)));
+	vec3 boxDimension1 = uHeight*vec3(expansion/4.0 * beatValue1, beatValue1, (0.5*(cos(iGlobalTime*moveSpeed+repPoint.y)+1.0+0.1)));
+	vec3 boxDimension2 = uHeight*vec3(expansion/4.0 * beatValue1, beatValue2, (0.5*(sin(iGlobalTime*moveSpeed+repPoint.y)+1.0+0.1)));
 	
-	vec3 spherePos = vec3(repPointSphere.x-(1.6-beatValue1)*0.25, repPoint.y-beatValue1+0.3, repPointSphere.z);
-	vec3 spherePos2 = vec3(repPointSphere2.x, repPoint2.y-beatValue2+0.3, repPointSphere2.z);
+	vec3 spherePos = vec3(repPointSphere.x-(1.6-beatValue1)*0.25, repPoint.y-beatValue1+0.11, repPointSphere.z);
+	vec3 spherePos2 = vec3(repPointSphere2.x, repPoint2.y-beatValue2+0.3+1.48*(1-uHeight), repPointSphere2.z);
 
-	float plane = distPlane(point, normalize(vec3(0, 1, 0)), -0.5);
-	float boxes = distBox(repPoint, vec3((1.6-beatValue1)*0.25, -0.5, 0), boxDimension1);
-	float boxes2 = distBox(repPoint2, vec3(0, -0.5, 0), boxDimension2);
+	float plane = distPlane(p, normalize(vec3(0, 1, 0)), -0.5);
 
-	boxes = distRoundBox(repPoint-vec3((1.6-beatValue1)*0.25, -0.5, 0), boxDimension1, 0.01);
-	boxes2 = distRoundBox(repPoint2-vec3(0, -0.5, 0), boxDimension2, 0.01);
+	float boxes = distRoundBox(repPoint-vec3((1.6-beatValue1)*0.25, -0.5, 0), boxDimension1, 0.01);
+	float boxes2 = distRoundBox(repPoint2-vec3(0, -0.5, 0), boxDimension2, 0.01);
 
-	float spheres = distSphere(spherePos, 0.2);
-	float spheres2 = distSphere(spherePos2, 0.2);
+	float spheres = distSphere(spherePos, uRadius);
+	float spheres2 = distSphere(spherePos2, uRadius);
 
-	vec3 refboxpos = rotate(p-cam.pos-vec3(0,uBoxYPos-(0.15-uHeight),2.5), vec3(uXRotation,0,uZRotation));
-	// refboxpos = opTwist(r efboxpos.xzy , uTwist);
-	float refBox = distRoundBox(refboxpos, vec3(0.15*(0.15/uHeight), uHeight, 0.15), 0.15);
+	vec3 refboxpos = rotate(p-vec3(cam.pos.x,uBoxYPos,uBoxZPos), vec3(uXRotation,0,0));
+
+	float refBox = distRoundBox(refboxpos, uSplit* vec3(0.15, 0.15, 0.15), 0.15);
 
 	plane = opUnionRound(plane, boxes, 0.7);
 	plane = opUnionRound(plane, boxes2, 0.7);
-	float ret = min(refBox, min(plane, min(spheres, spheres2)));
+
+	float pitBox = distBox(p-vec3(0,-0.6,301.3), vec3(0), vec3(30,2,50));
+
+	plane = max(plane, pitBox);
+
+	float ret = min(refBox, max(min(plane, min(spheres, spheres2)), pitBox));
 
 	if(ret==plane) color = vec3(1.0);
 	else if(ret==boxes) color = vec3(0.5*(sin(beatValue1)+1.0), 0.6, 0.5*(cos(beatValue1)+1.0));
 	else if(ret==boxes2) color = vec3(0.5*(sin(beatValue1)+1.0), 0.72, 0.5*(cos(beatValue1)+1.0));
-	else if(ret==spheres) color = vec3(0.5*(sin(beatValue1*2.0)+1.0), 0.6, 0.5*(cos(beatValue1*2.0)+1.0));
-	else if(ret==spheres2) color = vec3(0.5*(sin(beatValue1*2.0)+1.0), 0.72, 0.5*(cos(beatValue1*2.0)+1.0));
+	else if(ret==spheres || ret==pitBox) color = vec3(0.5*(sin(beatValue1*2.0)+1.0), 0.6, 0.5*(cos(beatValue1*2.0)+1.0));
+	else if(ret==spheres2 || ret==pitBox) color = vec3(0.5*(sin(beatValue1*2.0)+1.0), 0.72, 0.5*(cos(beatValue1*2.0)+1.0));
 	else if(ret==refBox)
 	{
 		hitRefractionBox = 1;
@@ -222,10 +215,45 @@ vec3 shading(vec3 pos, vec3 rd, vec3 n)
 	if(pos.x < 1.0) light *= shadow(pos, lightDir2);	//little trick to simulate two lights -> choose which light source depending on position
 	if(pos.x > -1.0) light *= shadow(pos, lightDir);
 	light += ambientOcclusion(pos, n) * ambient*brightness;
-	// light *= texture2D(tex0, pos.xz/5.0);
-	// float surf = texture2D(tex4, pos.xz*0.5+0.5);
-	// light *= surf;
 	return light;
+}
+
+vec3 bg(float aspect, vec2 uv, float size, float angle) {
+    float powF = -10.0;
+    vec2 xy;
+    xy[0] = uv[0] - 0.5;
+    xy[1] = uv[1] - 0.5;
+    xy[1] /= aspect;
+    xy[0] -= 0.5*sin(angle);
+    xy[1] += 0.5*cos(angle);
+    xy *= 20.0 * size;
+    
+    
+    float pow1 = pow(abs(xy[0] * sin(angle) + xy[1] * cos(angle)),powF);
+    float pow2 = pow(abs(xy[1] * sin(angle) - xy[0] * cos(angle)),powF);
+
+    float outColor = clamp(
+        pow1+pow2
+        , 0.0, 1.0);
+
+    return vec3(outColor);
+}
+
+//thanks to "0x17de" Shader "ColorfulCubes" from ShaderToy
+vec3 background(vec3 bgColor)
+{
+	vec3 outColor = bgColor * sin(uv.x) * cos(uv.y);
+	float speed = iGlobalTime / 4.0;
+	float aspect = iResolution.x / iResolution.y;
+
+	outColor /= 1.0-bg(aspect, uv, 8.0,  speed + pi);
+	outColor /= 1.0-bg(aspect, uv, 4.0,  speed - pi/2.0);
+	outColor /= 1.0-bg(aspect, uv, 2.0,  speed);
+	outColor /= 1.0-bg(aspect, uv, 1.3,  speed + pi/2.0);
+
+	outColor = clamp(outColor, vec3(0), vec3(0.9,0.8,0.8));
+
+	return outColor;
 }
 
 void main()
@@ -234,15 +262,15 @@ void main()
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
-	cam.pos = vec3(0,0,iGlobalTime*4.0);
-	cam.dir = rotate(normalize(vec3( p.x, p.y, 1 )), vec3(uCameraXRot, 0, uCameraZRot));
+	cam.pos = vec3(0,uCameraY,uCameraZ);
+	cam.dir = rotate(normalize(vec3( p.x, p.y, 1 )), vec3(uCameraXRot, 0, 0));
 
 	vec4 res;
 	int steps;
 	res = raymarch(cam.pos, cam.dir, steps);
 	vec3 currentCol = color; //save the color, the global color changes in shading (shadow & AO)
 
-	if(res.a==1.0 || uFade>0.9)
+	if(res.a==1.0)
 	{
 		//standard shading if not hit the refraction box
 		if(hitRefractionBox==0)
@@ -273,20 +301,22 @@ void main()
 			n = -getNormal(res.xyz);
 			refractDir = normalize(refract(refractDir, n, 1.3/1.0));
 			res = raymarch(res.xyz - 0.01*n, refractDir, st);
-			currentCol += res.a==1.0 ? shading(res.xyz, refractDir, n) : vec3((uv.x-p.x)*1.6);
+			currentCol += res.a==1.0 ? shading(res.xyz, refractDir, n) : background(vec3(0.7, 0.7, 0.6));
 		}
 	}
 	else	//background
 	{
-		currentCol = vec3((uv.x-p.x)*1.6);
-		// currentCol = texture2D(tex4, uv);
+		//currentCol = vec3((uv.x-p.x)*1.6);
+		currentCol = background(vec3(0.8, 0.7, 0.5));
 	}
 
 	//fog
 	vec3 fogColor = vec3(1.0);
 	float fogDist = 200.0;
-	// currentCol *= texture2D(tex3, uv);	//vignette
-	// currentCol = mix(currentCol, fogColor, clamp((steps/fogDist)+uFade, 0, 1));
+	currentCol *= texture2D(tex3, uv);	//vignette
+	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist), 0, 1));
+	//fading
+	currentCol = mix(vec3(0), currentCol, clamp(uFade,0,1));
 
 	
 

@@ -10,6 +10,7 @@ uniform float uCameraXRot, uCameraYRot, uCameraZRot;
 uniform float uR, uG, uB;
 
 uniform float uBoxXPos, uBoxYPos, uBoxZPos;
+uniform sampler2D tex3;
 in vec2 uv;
 
 const int maxSteps = 256;
@@ -206,6 +207,7 @@ void main()
 	float fogDist = 70.0;
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist), 0, 1));
 	currentCol = mix(vec3(uFade), currentCol, 1.0-uFade);
+	currentCol *= texture2D(tex3, uv);	//vignette
 
 	gl_FragColor = vec4(currentCol, 1.0);
 }

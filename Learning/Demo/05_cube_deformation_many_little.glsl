@@ -4,7 +4,10 @@ uniform float uMengerParam;
 uniform float uFade;
 
 uniform float uCameraZ;
+uniform float uCameraXRot, uCameraYRot, uCameraZRot;
 uniform float uR, uG, uB;
+
+uniform sampler2D tex3;
 
 in vec2 uv;
 
@@ -210,7 +213,7 @@ void main()
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
 	cam.pos = vec3(0,0,uCameraZ);
-	cam.dir = normalize(vec3( p.x, p.y, 1 ));
+	cam.dir = rotate( normalize(vec3( p.x, p.y, 1 )), vec3(uCameraXRot, uCameraYRot, uCameraZRot));
 
 	vec4 res;
 	int steps;
@@ -231,6 +234,7 @@ void main()
 	// fogColor = vec3(0.1, 0.6, 0.4);
 	float fogDist = 70.0;
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist), 0, 1));
+	currentCol *= texture2D(tex3, uv);	//vignette
 
 	gl_FragColor = vec4(currentCol, 1.0);
 }

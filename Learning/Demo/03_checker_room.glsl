@@ -228,6 +228,44 @@ vec3 shading(vec3 pos, vec3 rd, vec3 n)
 	return light;
 }
 
+vec3 bg(float aspect, vec2 uv, float size, float angle) {
+    float powF = -10.0;
+    vec2 xy;
+    xy[0] = uv[0] - 0.5;
+    xy[1] = uv[1] - 0.5;
+    xy[1] /= aspect;
+    xy[0] -= 0.5*sin(angle);
+    xy[1] += 0.5*cos(angle);
+    xy *= 20.0 * size;
+    
+    
+    float pow1 = pow(abs(xy[0] * sin(angle) + xy[1] * cos(angle)),powF);
+    float pow2 = pow(abs(xy[1] * sin(angle) - xy[0] * cos(angle)),powF);
+
+    float outColor = clamp(
+        pow1+pow2
+        , 0.0, 1.0);
+
+    return vec3(outColor);
+}
+
+//thanks to "0x17de" Shader "ColorfulCubes" from ShaderToy
+vec3 background(vec3 bgColor)
+{
+	vec3 outColor = bgColor * sin(uv.x) * cos(uv.y);
+	float speed = iGlobalTime / 4.0;
+	float aspect = iResolution.x / iResolution.y;
+
+	outColor /= 1.0-bg(aspect, uv, 8.0,  speed + pi);
+	outColor /= 1.0-bg(aspect, uv, 4.0,  speed - pi/2.0);
+	outColor /= 1.0-bg(aspect, uv, 2.0,  speed);
+	outColor /= 1.0-bg(aspect, uv, 1.3,  speed + pi/2.0);
+
+	outColor = clamp(outColor, vec3(0), vec3(0.9,0.8,0.8));
+
+	return outColor;
+}
+
 void main()
 {
 	float fov = 60.0;
@@ -273,19 +311,19 @@ void main()
 			n = -getNormal(res.xyz);
 			refractDir = normalize(refract(refractDir, n, 1.3/1.0));
 			res = raymarch(res.xyz - 0.01*n, refractDir, st);
-			currentCol += res.a==1.0 ? shading(res.xyz, refractDir, n) : vec3((uv.x-p.x)*1.6);
+			currentCol += res.a==1.0 ? shading(res.xyz, refractDir, n) : background(vec3(0.7, 0.7, 0.6));
 		}
 	}
 	else	//background
 	{
-		currentCol = vec3((uv.x-p.x)*1.6);
+		currentCol = background(vec3(0.8, 0.7, 0.5));
 		// currentCol = texture2D(tex4, uv);
 	}
 
 	//fog
 	vec3 fogColor = vec3(1.0);
 	float fogDist = 200.0;
-	// currentCol *= texture2D(tex3, uv);	//vignette
+	currentCol *= texture2D(tex3, uv);	//vignette
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist)+uFade, 0, 1));
 
 	
