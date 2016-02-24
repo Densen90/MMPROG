@@ -120,23 +120,7 @@
         </Keyframe>
         <Keyframe>
           <Time>98.87526</Time>
-          <Value>0</Value>
-        </Keyframe>
-        <Keyframe>
-          <Time>103.338257</Time>
-          <Value>150</Value>
-        </Keyframe>
-        <Keyframe>
-          <Time>103.466621</Time>
-          <Value>150</Value>
-        </Keyframe>
-        <Keyframe>
-          <Time>104.82634</Time>
-          <Value>0</Value>
-        </Keyframe>
-        <Keyframe>
-          <Time>106.936989</Time>
-          <Value>0</Value>
+          <Value>-100</Value>
         </Keyframe>
         <Keyframe>
           <Time>122.529724</Time>
@@ -781,12 +765,8 @@
           <Value>0.5</Value>
         </Keyframe>
         <Keyframe>
-          <Time>103.700607</Time>
-          <Value>0</Value>
-        </Keyframe>
-        <Keyframe>
-          <Time>107.354813</Time>
-          <Value>1.1</Value>
+          <Time>107.669769</Time>
+          <Value>1.09</Value>
         </Keyframe>
         <Keyframe>
           <Time>130.68248</Time>
@@ -992,6 +972,14 @@
         <Keyframe>
           <Time>60.5641251</Time>
           <Value>0.1536219</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>61.01564</Time>
+          <Value>0.3</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>61.54858</Time>
+          <Value>0.15168488</Value>
         </Keyframe>
         <Keyframe>
           <Time>138.64</Time>
@@ -1299,6 +1287,14 @@
           <Value>0.15</Value>
         </Keyframe>
         <Keyframe>
+          <Time>59.64957</Time>
+          <Value>0.4</Value>
+        </Keyframe>
+        <Keyframe>
+          <Time>60.5996742</Time>
+          <Value>0.15</Value>
+        </Keyframe>
+        <Keyframe>
           <Time>84.90256</Time>
           <Value>0.15</Value>
         </Keyframe>
@@ -1379,15 +1375,11 @@
           <ShaderPath>.\05_cube_deformation_many_little.glsl</ShaderPath>
         </ShaderKeyframe>
         <ShaderKeyframe>
-          <Time>103.560959</Time>
-          <ShaderPath>.\03_checker_room.glsl</ShaderPath>
-        </ShaderKeyframe>
-        <ShaderKeyframe>
-          <Time>107.356552</Time>
+          <Time>106.197586</Time>
           <ShaderPath>.\05_cube_deformation_many_little.glsl</ShaderPath>
         </ShaderKeyframe>
         <ShaderKeyframe>
-          <Time>122.690758</Time>
+          <Time>122.646263</Time>
           <ShaderPath>.\06_final_shatter.glsl</ShaderPath>
         </ShaderKeyframe>
       </ShaderKeyframes>

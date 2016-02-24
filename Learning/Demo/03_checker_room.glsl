@@ -131,8 +131,8 @@ float distanceField(vec3 p)
 	// refboxpos = opTwist(r efboxpos.xzy , uTwist);
 	float refBox = distRoundBox(refboxpos, vec3(0.15*(0.15/uHeight), uHeight, 0.15), 0.15);
 
-	plane = opUnionRound(plane, boxes, 0.7);
-	plane = opUnionRound(plane, boxes2, 0.7);
+	plane = opUnionRound(plane, boxes, 0.3);
+	plane = opUnionRound(plane, boxes2, 0.3);
 	float ret = min(refBox, min(plane, min(spheres, spheres2)));
 
 	if(ret==plane) color = vec3(1.0);

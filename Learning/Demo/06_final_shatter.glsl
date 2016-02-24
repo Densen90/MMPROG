@@ -119,8 +119,8 @@ float distanceField(vec3 p)
 
 	float refBox = distRoundBox(refboxpos, uSplit* vec3(0.15, 0.15, 0.15), 0.15);
 
-	plane = opUnionRound(plane, boxes, 0.7);
-	plane = opUnionRound(plane, boxes2, 0.7);
+	plane = opUnionRound(plane, boxes, 0.3*uHeight);
+	plane = opUnionRound(plane, boxes2, 0.3*uHeight);
 
 	float pitBox = distBox(p-vec3(0,-0.6,301.3), vec3(0), vec3(30,2,50));
 

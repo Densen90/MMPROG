@@ -206,8 +206,9 @@ void main()
 	// fogColor = vec3(0.1, 0.6, 0.4);
 	float fogDist = 70.0;
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist), 0, 1));
-	currentCol = mix(vec3(uFade), currentCol, 1.0-uFade);
 	currentCol *= texture2D(tex3, uv);	//vignette
+	currentCol = mix(vec3(uFade), currentCol, 1.0-uFade);
+	
 
 	gl_FragColor = vec4(currentCol, 1.0);
 }
