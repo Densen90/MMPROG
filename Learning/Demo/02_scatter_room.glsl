@@ -233,7 +233,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 	col.g = smoothstep(0.0, 0.5, col.g - 0.1);
 	col.b = smoothstep(-0.3, 1.5, col.b);
 	
-	fragColor = mix( vec4(col, 1.0), vec4(1), uFade);
+	//HACKHACKHACKHACKHACKHACK
+	fragColor = iGlobalTime>30 ? mix( vec4(col, 1.0), vec4(1), uFade) : vec4(col,1.0);
 }
 
 void main()
