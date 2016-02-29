@@ -127,7 +127,7 @@ float distanceField(vec3 p)
 	float spheres = distSphere(spherePos, 0.2);
 	float spheres2 = distSphere(spherePos2, 0.2);
 
-	vec3 refboxpos = rotate(p-cam.pos-vec3(0,uBoxYPos-(0.15-uHeight),2.5), vec3(uXRotation,0,uZRotation));
+	vec3 refboxpos = rotate(p-cam.pos-vec3(0,uBoxYPos-(0.15-uHeight)-0.3,2.7), vec3(uXRotation,0,uZRotation));
 	// refboxpos = opTwist(r efboxpos.xzy , uTwist);
 	float refBox = distRoundBox(refboxpos, vec3(0.15*(0.15/uHeight), uHeight, 0.15), 0.15);
 
@@ -209,7 +209,7 @@ float ambientOcclusion(vec3 p, vec3 n)
 	return 1.0 - clamp(res, 0.0, 1.0);
 }
 
-//calculatte the color, the shadow, the lighting for a position
+//calculate the color, the shadow, the lighting for a position
 vec3 shading(vec3 pos, vec3 rd, vec3 n)
 {
 	vec3 light = max(ambient*brightness, dot(n, lightDir)) * lightCol;	//lambert light with light Color
@@ -219,8 +219,8 @@ vec3 shading(vec3 pos, vec3 rd, vec3 n)
 	light.b = smoothstep(-0.3, 1.5, light.b);
 
 
-	if(pos.x < 1.0) light *= shadow(pos, lightDir2);	//little trick to simulate two lights -> choose which light source depending on position
-	if(pos.x > -1.0) light *= shadow(pos, lightDir);
+	if(pos.x < 1.7) light *= shadow(pos, lightDir2);	//little trick to simulate two lights -> choose which light source depending on position
+	if(pos.x > -1.7 ) light *= shadow(pos, lightDir);
 	light += ambientOcclusion(pos, n) * ambient*brightness;
 	// light *= texture2D(tex0, pos.xz/5.0);
 	// float surf = texture2D(tex4, pos.xz*0.5+0.5);
@@ -272,8 +272,8 @@ void main()
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
-	cam.pos = vec3(0,0,iGlobalTime*4.0);
-	cam.dir = rotate(normalize(vec3( p.x, p.y, 1 )), vec3(uCameraXRot, 0, uCameraZRot));
+	cam.pos = vec3(0,0.3,iGlobalTime*4.0);
+	cam.dir = rotate(normalize(vec3( p.x, p.y, 1 )), vec3(uCameraXRot-10, 0, uCameraZRot));
 
 	vec4 res;
 	int steps;
@@ -323,7 +323,7 @@ void main()
 	//fog
 	vec3 fogColor = vec3(1.0);
 	float fogDist = 200.0;
-	currentCol *= texture2D(tex3, uv);	//vignette
+	currentCol *= pow(texture2D(tex3, uv).r, 2);	//vignette
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist)+uFade, 0, 1));
 
 	

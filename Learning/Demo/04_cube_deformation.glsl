@@ -4,6 +4,7 @@ uniform float uMengerParam;
 uniform float uFade;
 uniform float uSplit;
 
+uniform float uXRotation, uZRotation;
 uniform float uCameraX, uCameraY, uCameraZ;
 uniform float uCameraXRot, uCameraYRot, uCameraZRot;
 
@@ -89,7 +90,8 @@ float distanceField(vec3 p)
    	vec3 boxPos = vec3(uBoxXPos, uBoxYPos, uBoxZPos);
    	if(uSplit<1.0)
    	{
-   		float dBox = distRoundBox(p- boxPos, vec3(0.5), 0.25);
+   		vec3 rotP = rotate(p- boxPos, vec3(uXRotation, 0, uZRotation));
+   		float dBox = distRoundBox(rotP, vec3(0.5), 0.25);
 	   	dist = min(dist, dBox);
    	}
    	else
@@ -206,7 +208,7 @@ void main()
 	// fogColor = vec3(0.1, 0.6, 0.4);
 	float fogDist = 70.0;
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist), 0, 1));
-	currentCol *= texture2D(tex3, uv);	//vignette
+	currentCol *= pow(texture2D(tex3, uv).r, 1.8);	//vignette
 	currentCol = mix(vec3(uFade), currentCol, 1.0-uFade);
 	
 

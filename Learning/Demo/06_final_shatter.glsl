@@ -313,7 +313,7 @@ void main()
 	//fog
 	vec3 fogColor = vec3(1.0);
 	float fogDist = 200.0;
-	currentCol *= texture2D(tex3, uv);	//vignette
+	currentCol *= pow(texture2D(tex3, uv).r, 2);	//vignette
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist), 0, 1));
 	//fading
 	currentCol = mix(vec3(0), currentCol, clamp(uFade,0,1));
