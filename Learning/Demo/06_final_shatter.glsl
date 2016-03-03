@@ -35,14 +35,11 @@ struct Camera
 	vec3 dir;
 } cam;
 
-// give the distance to a plane from a point p and normal n, shifted by y
 float distPlane( vec3 p, vec3 n, float y )
 {
-	// n must be normalized
 	return dot(p,n) - y;
 }
 
-// give the distance from point p to a sphere surface at origin
 float distSphere(vec3 p, float rad)
 {
 	return length(p) - rad;
@@ -65,7 +62,6 @@ vec3 pointRepetition(vec3 point, vec3 c)
 	return point;
 }
 
-// Rotation / Translation of a point p with rotation r
 vec3 rotate( vec3 p, vec3 r )
 {
 	r.x *= pi/180.0;
@@ -142,8 +138,6 @@ float distanceField(vec3 p)
 	return ret;
 }
 
-// marching along the ray at step sizes, 
-// and checking whether or not the surface is within a given threshold
 vec4 raymarch(vec3 rayOrigin, vec3 rayDir, out int steps)
 {
 	float totalDist = 0.0;
@@ -152,7 +146,7 @@ vec4 raymarch(vec3 rayOrigin, vec3 rayDir, out int steps)
 		steps = j;
 		vec3 p = rayOrigin + totalDist*rayDir;
 		float dist = distanceField(p);
-		if(abs(dist)<epsilon)	//if it is near the surface, return an intersection
+		if(abs(dist)<epsilon)
 		{
 			return vec4(p, 1.0);
 		}
@@ -162,8 +156,6 @@ vec4 raymarch(vec3 rayOrigin, vec3 rayDir, out int steps)
 	return vec4(0);
 }
 
-// Approximates the (normalized) gradient of the distance function at the given point.
-// If p is near a surface, the function will approximate the surface normal.
 vec3 getNormal(vec3 p)
 {
 	float h = epsilon;
@@ -188,31 +180,29 @@ float shadow(vec3 ro, vec3 rd)
     return res;
 }
 
-//calculate ambient occlusion
 float ambientOcclusion(vec3 p, vec3 n)
 {
 	float res = 0.0;
 	float fac = 1.0;
 	for(float i=0.0; i<aoSamples; i++)
 	{
-		float distOut = i*0.3;	//go on normal ray AOSAMPLES times with factor 0.3
-		res += fac * (distOut - distanceField(p + n*distOut));	//look for every step, how far the nearest object is
-		fac *= 0.5;	//for every step taken on the normal ray, the fac decreases, so the shadow gets brighter
+		float distOut = i*0.3;
+		res += fac * (distOut - distanceField(p + n*distOut));
+		fac *= 0.5;
 	}
 	return 1.0 - clamp(res, 0.0, 1.0);
 }
 
-//calculatte the color, the shadow, the lighting for a position
 vec3 shading(vec3 pos, vec3 rd, vec3 n)
 {
-	vec3 light = max(ambient*brightness, dot(n, lightDir)) * lightCol;	//lambert light with light Color
+	vec3 light = max(ambient*brightness, dot(n, lightDir)) * lightCol;
 	
 	light.r = smoothstep(0.0, 0.5, light.r);
 	light.g = smoothstep(0.0, 0.5, light.g - 0.1);
 	light.b = smoothstep(-0.3, 1.5, light.b);
 
 
-	if(pos.x < 1.0) light *= shadow(pos, lightDir2);	//little trick to simulate two lights -> choose which light source depending on position
+	if(pos.x < 1.0) light *= shadow(pos, lightDir2);
 	if(pos.x > -1.0) light *= shadow(pos, lightDir);
 	light += ambientOcclusion(pos, n) * ambient*brightness;
 	return light;
@@ -256,9 +246,21 @@ vec3 background(vec3 bgColor)
 	return outColor;
 }
 
+vec3 ScreenSettings(vec3 inCol, float bright, float saturation, float contrast)
+{
+	vec3 lumCoeff = vec3( 0.2126, 0.7152, 0.0722 );
+	vec3 brightColor = inCol.rgb * bright;
+	float intensFactor = dot( brightColor, lumCoeff );
+	vec3 intensFactor3 = vec3( intensFactor );
+	vec3 saturationColor = mix( intensFactor3, brightColor, saturation );
+	vec3 contrastColor = mix( vec3(0.5), saturationColor, contrast );
+
+	return contrastColor;
+}
+
 void main()
 {
-	float fov = 60.0;
+	float fov = 90.0;
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
@@ -268,15 +270,14 @@ void main()
 	vec4 res;
 	int steps;
 	res = raymarch(cam.pos, cam.dir, steps);
-	vec3 currentCol = color; //save the color, the global color changes in shading (shadow & AO)
+	vec3 currentCol = color;
 
 	if(res.a==1.0)
 	{
-		//standard shading if not hit the refraction box
 		if(hitRefractionBox==0)
 		{		
 			currentCol *= clamp(shading(res.xyz, cam.dir, getNormal(res.xyz)), 0.0, 1.0);
-		}//refraction shading otherwise
+		}
 		else
 		{
 
@@ -284,7 +285,6 @@ void main()
 			
 			vec3 n = getNormal(res.xyz);
 
-			//Specular Lighting
 			vec3 reflection = normalize(reflect(lightDir, n));
 			vec3 viewDirection = normalize(res.xyz);
 			float spec = max(ambient, dot(reflection, viewDirection));
@@ -294,29 +294,26 @@ void main()
 			spec = max(ambient, dot(reflection, viewDirection));
 			currentCol += pow(spec, 30);
 
-			//first intersection --> inside the cube, air to water
 			vec3 refractDir = normalize(refract(cam.dir, n, 1.0/1.3));
 			res = raymarch(res.xyz - 0.01*n, refractDir, st);
-			//second intersection --> outside of cube, water to air
 			n = -getNormal(res.xyz);
 			refractDir = normalize(refract(refractDir, n, 1.3/1.0));
 			res = raymarch(res.xyz - 0.01*n, refractDir, st);
 			currentCol += res.a==1.0 ? shading(res.xyz, refractDir, n) : background(vec3(0.7, 0.7, 0.6));
 		}
 	}
-	else	//background
+	else
 	{
-		//currentCol = vec3((uv.x-p.x)*1.6);
 		currentCol = background(vec3(0.8, 0.7, 0.5));
 	}
 
-	//fog
 	vec3 fogColor = vec3(1.0);
 	float fogDist = 200.0;
-	currentCol *= pow(texture2D(tex3, uv).r, 2);	//vignette
+	currentCol *= pow(texture2D(tex3, uv).r, 2);
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist), 0, 1));
-	//fading
 	currentCol = mix(vec3(0), currentCol, clamp(uFade,0,1));
+	currentCol = ScreenSettings(currentCol, 0.9, 1.2, 1.2);
+	
 
 	
 

@@ -190,7 +190,7 @@ vec3 inscatter (vec3 ro, vec3 rd, vec3 scatterDir, float hit, vec2 screenPos)
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
-	float fov = 100.0;
+	float fov = 120.0;
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 

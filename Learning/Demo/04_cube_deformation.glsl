@@ -88,6 +88,8 @@ float distanceField(vec3 p)
    	}
 
    	vec3 boxPos = vec3(uBoxXPos, uBoxYPos, uBoxZPos);
+
+   	//mostly have one cube we chase, but at a certain time, it splits into 4 cubes
    	if(uSplit<1.0)
    	{
    		vec3 rotP = rotate(p- boxPos, vec3(uXRotation, 0, uZRotation));
@@ -107,8 +109,6 @@ float distanceField(vec3 p)
    	return dist;
 }
 
-// marching along the ray at step sizes, 
-// and checking whether or not the surface is within a given threshold
 vec4 raymarch(vec3 rayOrigin, vec3 rayDir, out int steps)
 {
 	float totalDist = 0.0;
@@ -117,7 +117,7 @@ vec4 raymarch(vec3 rayOrigin, vec3 rayDir, out int steps)
 		steps = j;
 		vec3 p = rayOrigin + totalDist*rayDir;
 		float dist = distanceField(p);
-		if(abs(dist)<epsilon)	//if it is near the surface, return an intersection
+		if(abs(dist)<epsilon)
 		{
 			return vec4(p, 1.0);
 		}
@@ -127,8 +127,6 @@ vec4 raymarch(vec3 rayOrigin, vec3 rayDir, out int steps)
 	return vec4(0);
 }
 
-// Approximates the (normalized) gradient of the distance function at the given point.
-// If p is near a surface, the function will approximate the surface normal.
 vec3 getNormal(vec3 p)
 {
 	float h = epsilon;
@@ -153,27 +151,37 @@ float shadow(vec3 ro, vec3 rd)
     return res;
 }
 
-//calculate ambient occlusion
 float ambientOcclusion(vec3 p, vec3 n)
 {
 	float res = 0.0;
 	float fac = 1.0;
 	for(float i=0.0; i<aoSamples; i++)
 	{
-		float distOut = i*0.3;	//go on normal ray AOSAMPLES times with factor 0.3
-		res += fac * (distOut - distanceField(p + n*distOut));	//look for every step, how far the nearest object is
-		fac *= 0.5;	//for every step taken on the normal ray, the fac decreases, so the shadow gets brighter
+		float distOut = i*0.3;
+		res += fac * (distOut - distanceField(p + n*distOut));
+		fac *= 0.5;
 	}
 	return 1.0 - clamp(res, 0.0, 1.0);
 }
 
-//calculatte the color, the shadow, the lighting for a position
 vec3 shading(vec3 pos, vec3 rd, vec3 n)
 {
-	vec3 light = max(ambient*brightness, dot(n, lightDir)) * lightCol;	//lambert light with light Color
+	vec3 light = max(ambient*brightness, dot(n, lightDir)) * lightCol;
 	light *= shadow(pos, lightDir);
 	light += ambientOcclusion(pos, n) * ambient*brightness;
 	return light;
+}
+
+vec3 ScreenSettings(vec3 inCol, float bright, float saturation, float contrast)
+{
+	vec3 lumCoeff = vec3( 0.2126, 0.7152, 0.0722 );
+	vec3 brightColor = inCol.rgb * bright;
+	float intensFactor = dot( brightColor, lumCoeff );
+	vec3 intensFactor3 = vec3( intensFactor );
+	vec3 saturationColor = mix( intensFactor3, brightColor, saturation );
+	vec3 contrastColor = mix( vec3(0.5), saturationColor, contrast );
+
+	return contrastColor;
 }
 
 void main()
@@ -192,25 +200,23 @@ void main()
 	vec4 res;
 	int steps;
 	res = raymarch(cam.pos, cam.dir, steps);
-	vec3 currentCol = color; //save the color, the global color changes in shading (shadow & AO)
+	vec3 currentCol = color;
 
 	if(res.a==1.0)
 	{
 		currentCol = shading(res.xyz, cam.dir, getNormal(res.xyz));
 	}
-	else	//background
+	else
 	{
 		currentCol = vec3(uR, uG, uB);
 	}
 
-	//fog
 	vec3 fogColor = vec3(uR, uG, uB);
-	// fogColor = vec3(0.1, 0.6, 0.4);
 	float fogDist = 70.0;
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist), 0, 1));
-	currentCol *= pow(texture2D(tex3, uv).r, 1.8);	//vignette
+	currentCol = ScreenSettings(currentCol, 0.9, 1.2, 1.4);
+	currentCol *= pow(texture2D(tex3, uv).r, 1.8);
 	currentCol = mix(vec3(uFade), currentCol, 1.0-uFade);
 	
-
 	gl_FragColor = vec4(currentCol, 1.0);
 }

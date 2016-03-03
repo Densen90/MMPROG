@@ -38,7 +38,6 @@ struct Camera
 // give the distance to a plane from a point p and normal n, shifted by y
 float distPlane( vec3 p, vec3 n, float y )
 {
-	// n must be normalized
 	return dot(p,n) - y;
 }
 
@@ -48,16 +47,12 @@ float distSphere(vec3 p, float rad)
 	return length(p) - rad;
 }
 
-float distBox(vec3 point, vec3 center, vec3 b )
-{
-  return length(max(abs(point - center) - b, vec3(0.0)));
-}
-
 float distRoundBox(vec3 p, vec3 b, float r)
 {
  	return length(max(abs(p)-b,0.0))-r;
 }
 
+//repetition of a point only in xy-direction
 vec3 pointRepetition(vec3 point, vec3 c)
 {
 	point.x = mod(point.x, c.x) - 0.5*c.x;
@@ -82,15 +77,6 @@ vec3 rotate( vec3 p, vec3 r )
 						sin(r.z),	cos(r.z),	0,
 						0,				0,				1 );
 	return xRot * yRot * zRot * p;
-}
-
-// twist the object
-vec3 opTwist( vec3 p, float amount )
-{
-    float c = cos(amount*p.y);
-    float s = sin(amount*p.y);
-    mat2  m = mat2(c,-s,s,c);
-    return vec3(m*p.xz,p.y);
 }
 
 float opUnionRound(float a, float b, float r) {
@@ -118,17 +104,14 @@ float distanceField(vec3 p)
 	vec3 spherePos2 = vec3(repPointSphere2.x, repPoint2.y-beatValue2+0.3, repPointSphere2.z);
 
 	float plane = distPlane(point, normalize(vec3(0, 1, 0)), -0.5);
-	float boxes = distBox(repPoint, vec3((1.6-beatValue1)*0.25, -0.5, 0), boxDimension1);
-	float boxes2 = distBox(repPoint2, vec3(0, -0.5, 0), boxDimension2);
 
-	boxes = distRoundBox(repPoint-vec3((1.6-beatValue1)*0.25, -0.5, 0), boxDimension1, 0.01);
-	boxes2 = distRoundBox(repPoint2-vec3(0, -0.5, 0), boxDimension2, 0.01);
+	float boxes = distRoundBox(repPoint-vec3((1.6-beatValue1)*0.25, -0.5, 0), boxDimension1, 0.01);
+	float boxes2 = distRoundBox(repPoint2-vec3(0, -0.5, 0), boxDimension2, 0.01);
 
 	float spheres = distSphere(spherePos, 0.2);
 	float spheres2 = distSphere(spherePos2, 0.2);
 
-	vec3 refboxpos = rotate(p-cam.pos-vec3(0,uBoxYPos-(0.15-uHeight)-0.3,2.7), vec3(uXRotation,0,uZRotation));
-	// refboxpos = opTwist(r efboxpos.xzy , uTwist);
+	vec3 refboxpos = rotate(p-cam.pos-vec3(0,uBoxYPos-(0.15-uHeight)-0.4,2.7), vec3(uXRotation,0,uZRotation));
 	float refBox = distRoundBox(refboxpos, vec3(0.15*(0.15/uHeight), uHeight, 0.15), 0.15);
 
 	plane = opUnionRound(plane, boxes, 0.3);
@@ -222,9 +205,6 @@ vec3 shading(vec3 pos, vec3 rd, vec3 n)
 	if(pos.x < 1.7) light *= shadow(pos, lightDir2);	//little trick to simulate two lights -> choose which light source depending on position
 	if(pos.x > -1.7 ) light *= shadow(pos, lightDir);
 	light += ambientOcclusion(pos, n) * ambient*brightness;
-	// light *= texture2D(tex0, pos.xz/5.0);
-	// float surf = texture2D(tex4, pos.xz*0.5+0.5);
-	// light *= surf;
 	return light;
 }
 
@@ -266,13 +246,35 @@ vec3 background(vec3 bgColor)
 	return outColor;
 }
 
+vec3 ScreenSettings(vec3 inCol, float bright, float saturation, float contrast)
+{
+	//Getting Luminece of the R, G, and B value, see http://en.wikipedia.org/wiki/Relative_luminance
+	vec3 lumCoeff = vec3( 0.2126, 0.7152, 0.0722 );
+
+	// Calculations for the Brightness
+	// First intensify the render texture by the set Brightness Amount
+	vec3 brightColor = inCol.rgb * bright;
+
+	//Now get the Brightness Values from the Texture --> texture is now greyscaled
+	float intensFactor = dot( brightColor, lumCoeff );
+	vec3 intensFactor3 = vec3( intensFactor );
+
+	//Operation for saturation (how much color should be shown) --> texture has now colors again
+	vec3 saturationColor = mix( intensFactor3, brightColor, saturation );
+
+	//Now Operation for Contrast, we lerp between the half of color and fullColor
+	vec3 contrastColor = mix( vec3(0.5), saturationColor, contrast );
+
+	return contrastColor;
+}
+
 void main()
 {
-	float fov = 60.0;
+	float fov = 90.0;
 	float tanFov = tan(fov / 2.0 * 3.14159 / 180.0) / iResolution.x;
 	vec2 p = tanFov * (gl_FragCoord.xy * 2.0 - iResolution.xy);
 
-	cam.pos = vec3(0,0.3,iGlobalTime*4.0);
+	cam.pos = vec3(0,0.4,iGlobalTime*4.0);
 	cam.dir = rotate(normalize(vec3( p.x, p.y, 1 )), vec3(uCameraXRot-10, 0, uCameraZRot));
 
 	vec4 res;
@@ -286,10 +288,10 @@ void main()
 		if(hitRefractionBox==0)
 		{		
 			currentCol *= clamp(shading(res.xyz, cam.dir, getNormal(res.xyz)), 0.0, 1.0);
-		}//refraction shading otherwise
+		}
 		else
 		{
-
+			//calculate refraction
 			float st;
 			
 			vec3 n = getNormal(res.xyz);
@@ -317,16 +319,15 @@ void main()
 	else	//background
 	{
 		currentCol = background(vec3(0.8, 0.7, 0.5));
-		// currentCol = texture2D(tex4, uv);
 	}
 
 	//fog
 	vec3 fogColor = vec3(1.0);
 	float fogDist = 200.0;
 	currentCol *= pow(texture2D(tex3, uv).r, 2);	//vignette
-	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist)+uFade, 0, 1));
+	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist)+uFade, 0, 1));	//fog
 
-	
+	currentCol = ScreenSettings(currentCol, 0.9, 1.2, 1.2);	//Screen settings -> taken from own unity shader project
 
 	gl_FragColor = vec4(currentCol, 1.0);
 }

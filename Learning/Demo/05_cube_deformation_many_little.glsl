@@ -30,7 +30,6 @@ struct Camera
 	vec3 dir;
 } cam;
 
-// Rotation / Translation of a point p with rotation r
 vec3 rotate( vec3 p, vec3 r )
 {
 	r.x *= pi/180.0;
@@ -98,6 +97,7 @@ float distanceField(vec3 p)
       scale *= 3;
    	}
 
+   	//only have the many little cubes at a certain time
    	if(uFade<1.09) return dist;
 
    	float boxesHorizUp1 = distRoundBox(pointXZRepetition(p-vec3(iGlobalTime*5,2.2,-5.5), vec3(2.1, 0, 20)), vec3(0.2), 0.01);
@@ -112,11 +112,6 @@ float distanceField(vec3 p)
    	
    	dist = min(dist, min(boxesHorizDown1, min(boxesHorizDown2, boxesHorizDown3)));
    	
-   	// float boxesHorizMiddle1 = distRoundBox(pointXZRepetition(p-vec3(iGlobalTime*9,0,-3.5), vec3(4, 0, 20)), vec3(0.6), 0.01);
-   	// float boxesHorizMiddle2 = distRoundBox(pointXZRepetition(p-vec3(-iGlobalTime*7,0,3.5), vec3(5, 0, 20)), vec3(0.6), 0.01);
-
-   	// dist = min(dist, min(boxesHorizMiddle1, boxesHorizMiddle2));
-   	
    	float boxesVertLeft1 = distRoundBox(pointYZRepetition(p-vec3(-2.2,iGlobalTime*6,-3.5), vec3(0, 2.0, 20)), vec3(0.2), 0.01);
    	float boxesVertLeft2 = distRoundBox(pointYZRepetition(p-vec3(-2.2,-iGlobalTime*2,1.3), vec3(0, 1.5, 20)), vec3(0.2), 0.01);
    	float boxesVertLeft3 = distRoundBox(pointYZRepetition(p-vec3(-2.2,iGlobalTime*4,5.3), vec3(0, 1.7, 20)), vec3(0.2), 0.01);
@@ -129,16 +124,9 @@ float distanceField(vec3 p)
    	
    	dist = min(dist, min(boxesVertRight1, min(boxesVertRight2, boxesVertRight3)));
 
-   	// float boxesVertMiddle1 = distRoundBox(pointYZRepetition(p-vec3(0,-iGlobalTime*8,-3.5), vec3(0, 4.3, 20)), vec3(0.6), 0.01);
-   	// float boxesVertMiddle2 = distRoundBox(pointYZRepetition(p-vec3(0,iGlobalTime*6,3.5), vec3(0, 5, 20)), vec3(0.6), 0.01);
-
-   	// dist = min(dist, min(boxesVertMiddle1, boxesVertMiddle2));
-
    	return dist;
 }
 
-// marching along the ray at step sizes, 
-// and checking whether or not the surface is within a given threshold
 vec4 raymarch(vec3 rayOrigin, vec3 rayDir, out int steps)
 {
 	float totalDist = 0.0;
@@ -147,7 +135,7 @@ vec4 raymarch(vec3 rayOrigin, vec3 rayDir, out int steps)
 		steps = j;
 		vec3 p = rayOrigin + totalDist*rayDir;
 		float dist = distanceField(p);
-		if(abs(dist)<epsilon)	//if it is near the surface, return an intersection
+		if(abs(dist)<epsilon)
 		{
 			return vec4(p, 1.0);
 		}
@@ -157,8 +145,6 @@ vec4 raymarch(vec3 rayOrigin, vec3 rayDir, out int steps)
 	return vec4(0);
 }
 
-// Approximates the (normalized) gradient of the distance function at the given point.
-// If p is near a surface, the function will approximate the surface normal.
 vec3 getNormal(vec3 p)
 {
 	float h = epsilon;
@@ -183,27 +169,37 @@ float shadow(vec3 ro, vec3 rd)
     return res;
 }
 
-//calculate ambient occlusion
 float ambientOcclusion(vec3 p, vec3 n)
 {
 	float res = 0.0;
 	float fac = 1.0;
 	for(float i=0.0; i<aoSamples; i++)
 	{
-		float distOut = i*0.3;	//go on normal ray AOSAMPLES times with factor 0.3
-		res += fac * (distOut - distanceField(p + n*distOut));	//look for every step, how far the nearest object is
-		fac *= 0.5;	//for every step taken on the normal ray, the fac decreases, so the shadow gets brighter
+		float distOut = i*0.3;
+		res += fac * (distOut - distanceField(p + n*distOut));
+		fac *= 0.5;
 	}
 	return 1.0 - clamp(res, 0.0, 1.0);
 }
 
-//calculatte the color, the shadow, the lighting for a position
 vec3 shading(vec3 pos, vec3 rd, vec3 n)
 {
-	vec3 light = max(ambient*brightness, dot(n, lightDir)) * lightCol;	//lambert light with light Color
+	vec3 light = max(ambient*brightness, dot(n, lightDir)) * lightCol;
 	light *= shadow(pos, lightDir);
 	light += ambientOcclusion(pos, n) * ambient*brightness;
 	return light;
+}
+
+vec3 ScreenSettings(vec3 inCol, float bright, float saturation, float contrast)
+{
+	vec3 lumCoeff = vec3( 0.2126, 0.7152, 0.0722 );
+	vec3 brightColor = inCol.rgb * bright;
+	float intensFactor = dot( brightColor, lumCoeff );
+	vec3 intensFactor3 = vec3( intensFactor );
+	vec3 saturationColor = mix( intensFactor3, brightColor, saturation );
+	vec3 contrastColor = mix( vec3(0.5), saturationColor, contrast );
+
+	return contrastColor;
 }
 
 void main()
@@ -218,23 +214,22 @@ void main()
 	vec4 res;
 	int steps;
 	res = raymarch(cam.pos, cam.dir, steps);
-	vec3 currentCol = color; //save the color, the global color changes in shading (shadow & AO)
+	vec3 currentCol = color;
 
 	if(res.a==1.0)
 	{
 		currentCol = shading(res.xyz, cam.dir, getNormal(res.xyz));
 	}
-	else	//background
+	else
 	{
 		currentCol = vec3(uR, uG, uB);
 	}
 
-	//fog
 	vec3 fogColor = vec3(uR, uG, uB);
-	// fogColor = vec3(0.1, 0.6, 0.4);
 	float fogDist = 70.0;
 	currentCol = mix(currentCol, fogColor, clamp((steps/fogDist), 0, 1));
-	currentCol *= pow(texture2D(tex3, uv).r, 1.8);	//vignette
+	currentCol = ScreenSettings(currentCol, 0.9, 1.2, 1.2);
+	currentCol *= pow(texture2D(tex3, uv).r, 1.8);
 
 	gl_FragColor = vec4(currentCol, 1.0);
 }
